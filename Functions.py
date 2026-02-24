@@ -91,10 +91,10 @@ def solve_day_milp(prices, occ1_day, occ2_day, params, output_flag=0) -> gp.Mode
                 Temp[r,t] ==
                 Temp[r,t-1]
                 + z_exch*(Temp[other,t-1] - Temp[r,t-1])
-                + z_loss*(Tout[t] - Temp[r,t-1])
+                + z_loss*(Tout[t-1] - Temp[r,t-1])
                 + z_conv*p[r,t-1]
                 - z_cool*v[t-1]
-                + z_occ*occ_rt_1,
+                + z_occ*occ_rt_1, # might change that name, so it shows it could be both rooms
                 name=f"Tdyn_{r}_{t}"
             )
 
@@ -109,10 +109,13 @@ def solve_day_milp(prices, occ1_day, occ2_day, params, output_flag=0) -> gp.Mode
     # Ventilation start indicator (assume v[-1]=0)
     for t in T:
         if t == 0:
-            m.addConstr(start[t] >= v[t], name="start0")
+            # v[-1] = 0  => start[0] = v[0]
+            m.addConstr(start[0] >= v[0], name="start0_lb")
+            m.addConstr(start[0] <= v[0], name="start0_ub")
         else:
-            m.addConstr(start[t] >= v[t] - v[t-1], name=f"start_{t}")
-
+            m.addConstr(start[t] >= v[t] - v[t - 1], name=f"start_lb_{t}")
+            m.addConstr(start[t] <= v[t], name=f"start_ub1_{t}")
+            m.addConstr(start[t] <= 1 - v[t - 1], name=f"start_ub2_{t}")
     # Ventilation inertia (min up-time U)
     for t in T:
         for k in range(U):
@@ -135,28 +138,33 @@ def solve_day_milp(prices, occ1_day, occ2_day, params, output_flag=0) -> gp.Mode
     # Low temperature override with hysteresis: if triggered, stay at max until Temp >= Tok
     for r in R:
         for t in T:
+            # Mutual exclusivity: cannot force max heating and force shutoff simultaneously
+            m.addConstr(
+                low_active[r, t] + temp_hi[r, t] <= 1,
+                name=f"mutual_excl_{r}_{t}"
+            )
+
             # low_trig indicates Temp below Tlow
-            m.addConstr(Temp[r,t] <= Tlow + M_T*(1 - low_trig[r,t]), name=f"lowtrig_ub_{r}_{t}")
-            m.addConstr(Temp[r,t] >= Tlow - M_T*(low_trig[r,t]), name=f"lowtrig_lb_{r}_{t}")
+            m.addConstr(Temp[r, t] <= Tlow + M_T * (1 - low_trig[r, t]), name=f"lowtrig_ub_{r}_{t}")
+            m.addConstr(Temp[r, t] >= Tlow - M_T * (low_trig[r, t]), name=f"lowtrig_lb_{r}_{t}")
 
             # below_ok indicates Temp below Tok
-            m.addConstr(Temp[r,t] <= Tok + M_T*(1 - below_ok[r,t]), name=f"belowok_ub_{r}_{t}")
-            m.addConstr(Temp[r,t] >= Tok - M_T*(below_ok[r,t]), name=f"belowok_lb_{r}_{t}")
+            m.addConstr(Temp[r, t] <= Tok + M_T * (1 - below_ok[r, t]), name=f"belowok_ub_{r}_{t}")
+            m.addConstr(Temp[r, t] >= Tok - M_T * (below_ok[r, t]), name=f"belowok_lb_{r}_{t}")
 
             if t == 0:
-                m.addConstr(low_active[r,t] >= low_trig[r,t], name=f"lowact0_{r}")
+                m.addConstr(low_active[r, t] >= low_trig[r, t], name=f"lowact0_{r}")
             else:
                 cont = m.addVar(vtype=GRB.BINARY, name=f"cont_{r}_{t}")
-                m.addConstr(cont <= low_active[r,t-1], name=f"cont1_{r}_{t}")
-                m.addConstr(cont <= below_ok[r,t],     name=f"cont2_{r}_{t}")
-                m.addConstr(cont >= low_active[r,t-1] + below_ok[r,t] - 1, name=f"cont3_{r}_{t}")
-
-                m.addConstr(low_active[r,t] >= low_trig[r,t], name=f"lowact_trig_{r}_{t}")
-                m.addConstr(low_active[r,t] >= cont,          name=f"lowact_cont_{r}_{t}")
-                m.addConstr(low_active[r,t] <= low_trig[r,t] + cont, name=f"lowact_ub_{r}_{t}")
+                m.addConstr(cont <= low_active[r, t - 1], name=f"cont1_{r}_{t}")
+                m.addConstr(cont <= below_ok[r, t], name=f"cont2_{r}_{t}")
+                m.addConstr(cont >= low_active[r, t - 1] + below_ok[r, t] - 1, name=f"cont3_{r}_{t}")
+                m.addConstr(low_active[r, t] >= low_trig[r, t], name=f"lowact_trig_{r}_{t}")
+                m.addConstr(low_active[r, t] >= cont, name=f"lowact_cont_{r}_{t}")
+                m.addConstr(low_active[r, t] <= low_trig[r, t] + cont, name=f"lowact_ub_{r}_{t}")
 
             # If low_active=1, force heater to max (since p <= Pmax already)
-            m.addConstr(p[r,t] >= P_heater[r]*low_active[r,t], name=f"p_on_low_{r}_{t}")
+            m.addConstr(p[r, t] >= P_heater[r] * low_active[r, t], name=f"p_on_low_{r}_{t}")
 
     # Objective: electricity cost
     m.setObjective(

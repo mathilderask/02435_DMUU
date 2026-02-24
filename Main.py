@@ -84,7 +84,7 @@ params["vent_min_up_time"] = int(fixed["vent_min_up_time"])
 daily_costs = []
 solutions = {}
 
-example_days = [30, 72]  # pick any two days for plotting later
+example_days = [10, 33]  # pick any two days for plotting later
 
 for d in range(num_days):
     sol = solve_day_milp(

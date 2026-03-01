@@ -10,8 +10,13 @@ import Data.SystemCharacteristics as SC
 
 
 from gurobipy import GRB
-from Functions import solve_day_milp, plot_results
+#from Functions import solve_day_milp, plot_results
+import importlib
+import Functions
+importlib.reload(Functions)
 
+solve_day_milp = Functions.solve_day_milp
+plot_results   = Functions.plot_results
 
 
 
@@ -109,3 +114,4 @@ print("Average daily electricity cost over", num_days, "days:", avg_cost)
 
 for d in example_days:
     plot_results(solutions[d], price, occ1, occ2, d)
+# %%

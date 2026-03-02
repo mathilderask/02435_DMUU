@@ -1,16 +1,10 @@
 #%% Import packages
 
-import os
-import sys
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import gurobipy as gp
+
 import Data.SystemCharacteristics as SC
 
-
-from gurobipy import GRB
-#from Functions import solve_day_milp, plot_results
 import importlib
 import Functions
 importlib.reload(Functions)

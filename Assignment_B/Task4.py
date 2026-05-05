@@ -435,7 +435,68 @@ def select_action(state):
     }
 
     return HereAndNowActions
+import matplotlib.pyplot as plt
 
+def plot_adp_results(history):
+    """
+    Plot results from ADP simulation.
+
+    history: list of dictionaries (one per timestep)
+    """
+
+    T = [h["time"] for h in history]
+
+    T1 = [h["T1"] for h in history]
+    T2 = [h["T2"] for h in history]
+    H = [h["H"] for h in history]
+
+    Heat1 = [h["Heat1"] for h in history]
+    Heat2 = [h["Heat2"] for h in history]
+    Vent = [h["Ventilation"] for h in history]
+
+    Price = [h["price"] for h in history]
+    Cost = [h["cost"] for h in history]
+
+    fig, axes = plt.subplots(4, 1, figsize=(8, 10), sharex=True)
+
+    # ---- Temperature ----
+    axes[0].plot(T, T1, label="Room 1 Temp")
+    axes[0].plot(T, T2, label="Room 2 Temp")
+    axes[0].axhline(18, linestyle="--", color="gray")
+    axes[0].axhline(20, linestyle="--", color="gray")
+    axes[0].set_ylabel("Temperature")
+    axes[0].set_title("Temperatures")
+    axes[0].legend()
+    axes[0].grid(True)
+
+    # ---- Heating ----
+    axes[1].bar(T, Heat1, label="Heat Room 1")
+    axes[1].bar(T, Heat2, bottom=Heat1, label="Heat Room 2")
+    axes[1].set_ylabel("Heating Power")
+    axes[1].set_title("Heating Decisions")
+    axes[1].legend()
+    axes[1].grid(True)
+
+    # ---- Ventilation & Humidity ----
+    axes[2].step(T, Vent, where="mid", label="Ventilation ON")
+    axes[2].plot(T, H, label="Humidity")
+    axes[2].axhline(60, linestyle="--", color="gray")
+    axes[2].set_ylabel("Vent / Humidity")
+    axes[2].set_title("Ventilation & Humidity")
+    axes[2].legend()
+    axes[2].grid(True)
+
+    # ---- Price & Cost ----
+    axes[3].plot(T, Price, label="Price")
+    axes[3].bar(T, Cost, alpha=0.3, label="Cost")
+    axes[3].set_ylabel("Price / Cost")
+    axes[3].set_title("Price & Cost")
+    axes[3].set_xlabel("Time")
+    axes[3].legend()
+    axes[3].grid(True)
+
+    plt.tight_layout()
+    plt.show()
 
 # ============================================================
 # Local test block
@@ -445,7 +506,7 @@ def select_action(state):
 # so this block will NOT run during grading.
 # ============================================================
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
 
     import Data.v2_Checks as Checks
 
@@ -479,3 +540,92 @@ if __name__ == "__main__":
 
     print("\nSanitized ADP action:")
     print(action)
+
+if __name__ == "__main__":
+
+    fixed = SystemCharacteristics.get_fixed_data()
+
+    Pmax = float(fixed["heating_max_power"])
+    Pvent = float(fixed["ventilation_power"])
+    num_timeslots = int(fixed["num_timeslots"])
+
+    state = {
+        "T1": float(fixed["T1"]),
+        "T2": float(fixed["T2"]),
+        "H": float(fixed["H"]),
+        "Occ1": 30.0,
+        "Occ2": 20.0,
+        "price_t": 4.0,
+        "price_previous": 4.0,
+        "vent_counter": 0,
+        "low_override_r1": 0,
+        "low_override_r2": 0,
+        "current_time": 0
+    }
+
+    total_cost = 0.0
+    history = []
+
+    for t in range(num_timeslots):
+
+        action = select_action(state)
+
+        heat1 = action["HeatPowerRoom1"]
+        heat2 = action["HeatPowerRoom2"]
+        ventilation = action["VentilationON"]
+
+        hourly_cost = state["price_t"] * (
+            heat1 + heat2 + Pvent * ventilation
+        )
+
+        total_cost += hourly_cost
+
+        history.append({
+            "time": t,
+            "T1": state["T1"],
+            "T2": state["T2"],
+            "H": state["H"],
+            "Occ1": state["Occ1"],
+            "Occ2": state["Occ2"],
+            "price": state["price_t"],
+            "Heat1": heat1,
+            "Heat2": heat2,
+            "Ventilation": ventilation,
+            "cost": hourly_cost
+        })
+
+        params = {
+            "Pmax": Pmax,
+            "Pvent": Pvent,
+            "Tlow": float(fixed["temp_min_comfort_threshold"]),
+            "TOK": float(fixed["temp_OK_threshold"]),
+            "THigh": float(fixed["temp_max_comfort_threshold"]),
+            "HHigh": float(fixed["humidity_threshold"]),
+            "z_exch": float(fixed["heat_exchange_coeff"]),
+            "z_loss": float(fixed["thermal_loss_coeff"]),
+            "z_conv": float(fixed["heating_efficiency_coeff"]),
+            "z_cool": float(fixed["heat_vent_coeff"]),
+            "z_occ": float(fixed["heat_occupancy_coeff"]),
+            "eta_occ": float(fixed["humidity_occupancy_coeff"]),
+            "eta_vent": float(fixed["humidity_vent_coeff"]),
+            "Uvent": int(fixed["vent_min_up_time"]),
+            "Tout": list(fixed["outdoor_temperature"]),
+            "num_timeslots": num_timeslots
+        }
+
+        state = simulate_next_state(
+            state,
+            heat1,
+            heat2,
+            ventilation,
+            params
+        )
+
+    print("\nFull-day ADP test")
+    print("-----------------")
+    print("Total daily cost:", total_cost)
+    plot_adp_results(history)
+
+    print("\nHourly results:")
+    for row in history:
+        print(row)

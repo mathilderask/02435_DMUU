@@ -3,9 +3,9 @@
 import numpy as np
 import pyomo.environ as pyo
 
-import v2_SystemCharacteristics as SystemCharacteristics
-import PriceProcessRestaurant
-import OccupancyProcessRestaurant
+import Data.v2_SystemCharacteristics as SystemCharacteristics
+import Data.PriceProcessRestaurant
+import Data.OccupancyProcessRestaurant
 
 
 def select_action(state):

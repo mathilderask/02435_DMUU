@@ -314,327 +314,296 @@ def select_action(state):
     # Build stochastic MILP on tree nodes
     # Node-based decisions => non-anticipativity by construction
     # =========================================================
-    try:
-        m = pyo.ConcreteModel()
+    
+    m = pyo.ConcreteModel()
 
-        m.N = pyo.Set(initialize=all_nodes)
-        m.R = pyo.Set(initialize=[1, 2])
-        m.L = pyo.Set(initialize=leaf_nodes)
-        m.NNR = pyo.Set(initialize=nonroot_nodes)
+    m.N = pyo.Set(initialize=all_nodes)
+    m.R = pyo.Set(initialize=[1, 2])
+    m.L = pyo.Set(initialize=leaf_nodes)
+    m.NNR = pyo.Set(initialize=nonroot_nodes)
 
-        # Scenario-tree node probabilities and exogenous data
-        m.q = pyo.Param(m.N, initialize={n: nodes[n]["prob"] for n in all_nodes})
-        m.price = pyo.Param(m.N, initialize={n: nodes[n]["price"] for n in all_nodes})
-        m.occ = pyo.Param(
-            m.N, m.R,
-            initialize={(n, 1): nodes[n]["occ1"] for n in all_nodes} |
-                       {(n, 2): nodes[n]["occ2"] for n in all_nodes}
-        )
-        m.tout = pyo.Param(m.N, initialize={n: nodes[n]["tout"] for n in all_nodes})
-        m.stage = pyo.Param(m.N, initialize={n: nodes[n]["stage"] for n in all_nodes})
-
-
-
-        # -----------------------------------------------------
-        # Decision variables at each node
-        # -----------------------------------------------------
-        m.pc = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))     # commanded heater power
-        m.vb = pyo.Var(m.N, domain=pyo.Binary)           # commanded ventilation
-
-        # Effective actions after overrules/inertia
-        m.pf = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))
-        m.ve = pyo.Var(m.N, domain=pyo.Binary)
-
-        # State variables
-        m.Temp = pyo.Var(m.N, m.R)
-        m.Hum = pyo.Var(m.N)
-
-        # Binary logic
-        m.y_low = pyo.Var(m.N, m.R, domain=pyo.Binary)
-        m.y_ok = pyo.Var(m.N, m.R, domain=pyo.Binary)
-        m.y_high = pyo.Var(m.N, m.R, domain=pyo.Binary)
-        m.z_below_low = pyo.Var(m.N, m.R, domain=pyo.Binary)
-        m.start_vent = pyo.Var(m.N, domain=pyo.Binary)
+    # Scenario-tree node probabilities and exogenous data
+    m.q = pyo.Param(m.N, initialize={n: nodes[n]["prob"] for n in all_nodes})
+    m.price = pyo.Param(m.N, initialize={n: nodes[n]["price"] for n in all_nodes})
+    m.occ = pyo.Param(
+        m.N, m.R,
+        initialize={(n, 1): nodes[n]["occ1"] for n in all_nodes} |
+                    {(n, 2): nodes[n]["occ2"] for n in all_nodes}
+    )
+    m.tout = pyo.Param(m.N, initialize={n: nodes[n]["tout"] for n in all_nodes})
+    m.stage = pyo.Param(m.N, initialize={n: nodes[n]["stage"] for n in all_nodes})
 
 
 
-        # -----------------------------------------------------
-        # Root state fixing
-        # -----------------------------------------------------
-        m.root_temp1 = pyo.Constraint(expr=m.Temp[root, 1] == T1_0)
-        m.root_temp2 = pyo.Constraint(expr=m.Temp[root, 2] == T2_0)
-        m.root_hum = pyo.Constraint(expr=m.Hum[root] == H_0)
+    # -----------------------------------------------------
+    # Decision variables at each node
+    # -----------------------------------------------------
+    m.pc = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))     # commanded heater power
+    m.vb = pyo.Var(m.N, domain=pyo.Binary)           # commanded ventilation
 
-        m.root_y_low1 = pyo.Constraint(expr=m.y_low[root, 1] == low_override_r1_0)
-        m.root_y_low2 = pyo.Constraint(expr=m.y_low[root, 2] == low_override_r2_0)
+    # Effective actions after overrules/inertia
+    m.pf = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))
+    m.ve = pyo.Var(m.N, domain=pyo.Binary)
 
-        # Detect root OK / High conditions from observed temperature
-        m.root_y_ok_lb = pyo.ConstraintList()
-        m.root_y_ok_ub = pyo.ConstraintList()
-        m.root_y_high_lb = pyo.ConstraintList()
-        m.root_y_high_ub = pyo.ConstraintList()
+    # State variables
+    m.Temp = pyo.Var(m.N, m.R)
+    m.Hum = pyo.Var(m.N)
 
+    # Binary logic
+    m.y_low = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.y_ok = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.y_high = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.z_below_low = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.start_vent = pyo.Var(m.N, domain=pyo.Binary)
+
+
+
+    # -----------------------------------------------------
+    # Root state fixing
+    # -----------------------------------------------------
+    m.root_temp1 = pyo.Constraint(expr=m.Temp[root, 1] == T1_0)
+    m.root_temp2 = pyo.Constraint(expr=m.Temp[root, 2] == T2_0)
+    m.root_hum = pyo.Constraint(expr=m.Hum[root] == H_0)
+
+    m.root_y_low1 = pyo.Constraint(expr=m.y_low[root, 1] == low_override_r1_0)
+    m.root_y_low2 = pyo.Constraint(expr=m.y_low[root, 2] == low_override_r2_0)
+
+    # Detect root OK / High conditions from observed temperature
+    m.root_y_ok_lb = pyo.ConstraintList()
+    m.root_y_ok_ub = pyo.ConstraintList()
+    m.root_y_high_lb = pyo.ConstraintList()
+    m.root_y_high_ub = pyo.ConstraintList()
+
+    for r in [1, 2]:
+        m.root_y_ok_lb.add(m.Temp[root, r] >= TOK - BIG_M * (1 - m.y_ok[root, r]))
+        m.root_y_ok_ub.add(m.Temp[root, r] <= TOK + BIG_M * m.y_ok[root, r])
+
+        m.root_y_high_lb.add(m.Temp[root, r] >= THigh - BIG_M * (1 - m.y_high[root, r]))
+        m.root_y_high_ub.add(m.Temp[root, r] <= THigh + BIG_M * m.y_high[root, r])
+
+
+
+    # -----------------------------------------------------
+    # Threshold detection for non-root nodes
+    # -----------------------------------------------------
+    m.logic_cons = pyo.ConstraintList()
+
+    for n in nonroot_nodes:
         for r in [1, 2]:
-            m.root_y_ok_lb.add(m.Temp[root, r] >= TOK - BIG_M * (1 - m.y_ok[root, r]))
-            m.root_y_ok_ub.add(m.Temp[root, r] <= TOK + BIG_M * m.y_ok[root, r])
+            # T >= THigh <=> y_high = 1
+            m.logic_cons.add(m.Temp[n, r] >= THigh - BIG_M * (1 - m.y_high[n, r]))
+            m.logic_cons.add(m.Temp[n, r] <= THigh + BIG_M * m.y_high[n, r])
 
-            m.root_y_high_lb.add(m.Temp[root, r] >= THigh - BIG_M * (1 - m.y_high[root, r]))
-            m.root_y_high_ub.add(m.Temp[root, r] <= THigh + BIG_M * m.y_high[root, r])
+            # T >= TOK <=> y_ok = 1
+            m.logic_cons.add(m.Temp[n, r] >= TOK - BIG_M * (1 - m.y_ok[n, r]))
+            m.logic_cons.add(m.Temp[n, r] <= TOK + BIG_M * m.y_ok[n, r])
 
+            # T <= Tlow <=> z_below_low = 1
+            m.logic_cons.add(m.Temp[n, r] <= Tlow + BIG_M * (1 - m.z_below_low[n, r]))
+            m.logic_cons.add(m.Temp[n, r] >= Tlow - BIG_M * m.z_below_low[n, r])
 
+    # -----------------------------------------------------
+    # Low-temperature hysteresis update on the tree
+    #
+    # At node n:
+    # y_low[n] = 1 if Temp[n] <= Tlow
+    #         or if y_low[parent(n)] = 1 and Temp[n] < TOK
+    #         else 0
+    # -----------------------------------------------------
+    for n in nonroot_nodes:
+        p = parent[n]
+        for r in [1, 2]:
+            m.logic_cons.add(m.y_low[n, r] >= m.z_below_low[n, r])
+            m.logic_cons.add(m.y_low[n, r] >= m.y_low[p, r] - m.y_ok[n, r])
+            m.logic_cons.add(m.y_low[n, r] <= m.z_below_low[n, r] + m.y_low[p, r])
+            m.logic_cons.add(m.y_low[n, r] <= m.z_below_low[n, r] + (1 - m.y_ok[n, r]))
 
-        # -----------------------------------------------------
-        # Threshold detection for non-root nodes
-        # -----------------------------------------------------
-        m.logic_cons = pyo.ConstraintList()
+    # -----------------------------------------------------
+    # Effective heating action
+    #
+    # High-temp priority:
+    # if y_high = 1 => pf = 0
+    # elif y_low = 1 => pf = Pmax
+    # else pf = pc
+    # -----------------------------------------------------
+    m.heat_logic = pyo.ConstraintList()
+    for n in all_nodes:
+        for r in [1, 2]:
+            # high-temp forces off
+            m.heat_logic.add(m.pf[n, r] <= Pmax * (1 - m.y_high[n, r]))
 
-        for n in nonroot_nodes:
-            for r in [1, 2]:
-                # T >= THigh <=> y_high = 1
-                m.logic_cons.add(m.Temp[n, r] >= THigh - BIG_M * (1 - m.y_high[n, r]))
-                m.logic_cons.add(m.Temp[n, r] <= THigh + BIG_M * m.y_high[n, r])
+            # low-temp override forces max unless high-temp also active
+            m.heat_logic.add(m.pf[n, r] >= Pmax * (m.y_low[n, r] - m.y_high[n, r]))
 
-                # T >= TOK <=> y_ok = 1
-                m.logic_cons.add(m.Temp[n, r] >= TOK - BIG_M * (1 - m.y_ok[n, r]))
-                m.logic_cons.add(m.Temp[n, r] <= TOK + BIG_M * m.y_ok[n, r])
+            # if neither override is active, pf should equal pc
+            m.heat_logic.add(
+                m.pf[n, r] <= m.pc[n, r] + Pmax * (m.y_low[n, r] + m.y_high[n, r])
+            )
+            m.heat_logic.add(
+                m.pf[n, r] >= m.pc[n, r] - Pmax * (m.y_low[n, r] + m.y_high[n, r])
+            )
 
-                # T <= Tlow <=> z_below_low = 1
-                m.logic_cons.add(m.Temp[n, r] <= Tlow + BIG_M * (1 - m.z_below_low[n, r]))
-                m.logic_cons.add(m.Temp[n, r] >= Tlow - BIG_M * m.z_below_low[n, r])
+    # -----------------------------------------------------
+    # Ventilation logic
+    #
+    # Humidity overrule:
+    # if H > HHigh => ve = 1
+    #
+    # Inertia:
+    # if ventilation starts at node n, it must remain ON
+    # on descendants up to Uvent periods as allowed by the tree.
+    # -----------------------------------------------------
+    m.vent_logic = pyo.ConstraintList()
 
-        # -----------------------------------------------------
-        # Low-temperature hysteresis update on the tree
-        #
-        # At node n:
-        # y_low[n] = 1 if Temp[n] <= Tlow
-        #         or if y_low[parent(n)] = 1 and Temp[n] < TOK
-        #         else 0
-        # -----------------------------------------------------
-        for n in nonroot_nodes:
+    # humidity-triggered ON
+    for n in all_nodes:
+        m.vent_logic.add(m.Hum[n] <= HHigh + BIG_M * m.ve[n])
+
+    # effective vent must be at least commanded vent
+    for n in all_nodes:
+        m.vent_logic.add(m.ve[n] >= m.vb[n])
+
+    # startup detection
+    for n in all_nodes:
+        if n == root:
+            prev_on = 1 if vent_counter_0 > 0 else 0
+            m.vent_logic.add(m.start_vent[n] >= m.ve[n] - prev_on)
+            m.vent_logic.add(m.start_vent[n] <= m.ve[n])
+            m.vent_logic.add(m.start_vent[n] <= 1 - prev_on)
+        else:
             p = parent[n]
-            for r in [1, 2]:
-                m.logic_cons.add(m.y_low[n, r] >= m.z_below_low[n, r])
-                m.logic_cons.add(m.y_low[n, r] >= m.y_low[p, r] - m.y_ok[n, r])
-                m.logic_cons.add(m.y_low[n, r] <= m.z_below_low[n, r] + m.y_low[p, r])
-                m.logic_cons.add(m.y_low[n, r] <= m.z_below_low[n, r] + (1 - m.y_ok[n, r]))
+            m.vent_logic.add(m.start_vent[n] >= m.ve[n] - m.ve[p])
+            m.vent_logic.add(m.start_vent[n] <= m.ve[n])
+            m.vent_logic.add(m.start_vent[n] <= 1 - m.ve[p])
 
-        # -----------------------------------------------------
-        # Effective heating action
-        #
-        # High-temp priority:
-        # if y_high = 1 => pf = 0
-        # elif y_low = 1 => pf = Pmax
-        # else pf = pc
-        # -----------------------------------------------------
-        m.heat_logic = pyo.ConstraintList()
-        for n in all_nodes:
-            for r in [1, 2]:
-                # high-temp forces off
-                m.heat_logic.add(m.pf[n, r] <= Pmax * (1 - m.y_high[n, r]))
+    # existing inertia from current observed vent_counter
+    # Assignment logic: if started, must remain ON for 3 hours total. 
+    # Conservative interpretation from current counter:
+    # counter 1 => ON now and next step
+    # counter 2 => ON now
+    if vent_counter_0 == 1:
+        m.force_counter_root = pyo.Constraint(expr=m.ve[root] == 1)
+        for c in children[root]:
+            m.vent_logic.add(m.ve[c] == 1)
+    elif vent_counter_0 == 2:
+        m.force_counter_root = pyo.Constraint(expr=m.ve[root] == 1)
 
-                # low-temp override forces max unless high-temp also active
-                m.heat_logic.add(m.pf[n, r] >= Pmax * (m.y_low[n, r] - m.y_high[n, r]))
+    # minimum up-time along descendants
+    def descendants_with_depth(start_node, max_depth):
+        result = []
+        frontier = [(start_node, 0)]
+        while len(frontier) > 0:
+            curr, depth = frontier.pop(0)
+            if depth == max_depth:
+                continue
+            for ch in children[curr]:
+                result.append((ch, depth + 1))
+                frontier.append((ch, depth + 1))
+        return result
 
-                # if neither override is active, pf should equal pc
-                m.heat_logic.add(
-                    m.pf[n, r] <= m.pc[n, r] + Pmax * (m.y_low[n, r] + m.y_high[n, r])
-                )
-                m.heat_logic.add(
-                    m.pf[n, r] >= m.pc[n, r] - Pmax * (m.y_low[n, r] + m.y_high[n, r])
-                )
+    for n in all_nodes:
+        desc = descendants_with_depth(n, Uvent - 1)
+        for ch, depth in desc:
+            m.vent_logic.add(m.ve[ch] >= m.start_vent[n])
 
-        # -----------------------------------------------------
-        # Ventilation logic
-        #
-        # Humidity overrule:
-        # if H > HHigh => ve = 1
-        #
-        # Inertia:
-        # if ventilation starts at node n, it must remain ON
-        # on descendants up to Uvent periods as allowed by the tree.
-        # -----------------------------------------------------
-        m.vent_logic = pyo.ConstraintList()
+    # -----------------------------------------------------
+    # Dynamics from parent node -> child node
+    # -----------------------------------------------------
+    m.dynamics = pyo.ConstraintList()
 
-        # humidity-triggered ON
-        for n in all_nodes:
-            m.vent_logic.add(m.Hum[n] <= HHigh + BIG_M * m.ve[n])
+    for n in nonroot_nodes:
+        p = parent[n]
 
-        # effective vent must be at least commanded vent
-        for n in all_nodes:
-            m.vent_logic.add(m.ve[n] >= m.vb[n])
-
-        # startup detection
-        for n in all_nodes:
-            if n == root:
-                prev_on = 1 if vent_counter_0 > 0 else 0
-                m.vent_logic.add(m.start_vent[n] >= m.ve[n] - prev_on)
-                m.vent_logic.add(m.start_vent[n] <= m.ve[n])
-                m.vent_logic.add(m.start_vent[n] <= 1 - prev_on)
-            else:
-                p = parent[n]
-                m.vent_logic.add(m.start_vent[n] >= m.ve[n] - m.ve[p])
-                m.vent_logic.add(m.start_vent[n] <= m.ve[n])
-                m.vent_logic.add(m.start_vent[n] <= 1 - m.ve[p])
-
-        # existing inertia from current observed vent_counter
-        # Assignment logic: if started, must remain ON for 3 hours total. 
-        # Conservative interpretation from current counter:
-        # counter 1 => ON now and next step
-        # counter 2 => ON now
-        if vent_counter_0 == 1:
-            m.force_counter_root = pyo.Constraint(expr=m.ve[root] == 1)
-            for c in children[root]:
-                m.vent_logic.add(m.ve[c] == 1)
-        elif vent_counter_0 == 2:
-            m.force_counter_root = pyo.Constraint(expr=m.ve[root] == 1)
-
-        # minimum up-time along descendants
-        def descendants_with_depth(start_node, max_depth):
-            result = []
-            frontier = [(start_node, 0)]
-            while len(frontier) > 0:
-                curr, depth = frontier.pop(0)
-                if depth == max_depth:
-                    continue
-                for ch in children[curr]:
-                    result.append((ch, depth + 1))
-                    frontier.append((ch, depth + 1))
-            return result
-
-        for n in all_nodes:
-            desc = descendants_with_depth(n, Uvent - 1)
-            for ch, depth in desc:
-                m.vent_logic.add(m.ve[ch] >= m.start_vent[n])
-
-        # -----------------------------------------------------
-        # Dynamics from parent node -> child node
-        # -----------------------------------------------------
-        m.dynamics = pyo.ConstraintList()
-
-        for n in nonroot_nodes:
-            p = parent[n]
-
-            # room 1
-            m.dynamics.add(
-                m.Temp[n, 1] ==
-                m.Temp[p, 1]
-                + z_exch * (m.Temp[p, 2] - m.Temp[p, 1])
-                + z_loss * (m.tout[p] - m.Temp[p, 1])
-                + z_conv * m.pf[p, 1]
-                - z_cool * m.ve[p]
-                + z_occ * m.occ[p, 1]
-            )
-
-            # room 2
-            m.dynamics.add(
-                m.Temp[n, 2] ==
-                m.Temp[p, 2]
-                + z_exch * (m.Temp[p, 1] - m.Temp[p, 2])
-                + z_loss * (m.tout[p] - m.Temp[p, 2])
-                + z_conv * m.pf[p, 2]
-                - z_cool * m.ve[p]
-                + z_occ * m.occ[p, 2]
-            )
-
-            # humidity
-            m.dynamics.add(
-                m.Hum[n] ==
-                m.Hum[p]
-                + eta_occ * (m.occ[p, 1] + m.occ[p, 2])
-                - eta_vent * m.ve[p]
-            )
-
-
-
-        # -----------------------------------------------------
-        # Objective: expected energy cost over nodes
-        # plus small leaf penalty to reduce myopia
-        # -----------------------------------------------------
-        decision_nodes = [n for n in all_nodes if len(children[n]) > 0]
-
-        # Charge operating costs only at non-leaf nodes, i.e. nodes whose actions
-        # are followed by a modeled state transition. Leaf nodes represent the terminal
-        # predicted state of the lookahead horizon; their actions would not affect any
-        # future temperature or humidity state inside this model. Therefore, leaf nodes
-        # are used only in the terminal penalty.
-        energy_cost = sum(
-            m.q[n] * m.price[n] * (Pvent * m.ve[n] + m.pf[n, 1] + m.pf[n, 2])
-            for n in decision_nodes
+        # room 1
+        m.dynamics.add(
+            m.Temp[n, 1] ==
+            m.Temp[p, 1]
+            + z_exch * (m.Temp[p, 2] - m.Temp[p, 1])
+            + z_loss * (m.tout[p] - m.Temp[p, 1])
+            + z_conv * m.pf[p, 1]
+            - z_cool * m.ve[p]
+            + z_occ * m.occ[p, 1]
         )
 
-        terminal_cost = TERMINAL_TEMP_PENALTY * sum(
-            m.q[n] * ((m.Temp[n, 1] - TARGET_TEMP) ** 2 + (m.Temp[n, 2] - TARGET_TEMP) ** 2)
-            for n in leaf_nodes
+        # room 2
+        m.dynamics.add(
+            m.Temp[n, 2] ==
+            m.Temp[p, 2]
+            + z_exch * (m.Temp[p, 1] - m.Temp[p, 2])
+            + z_loss * (m.tout[p] - m.Temp[p, 2])
+            + z_conv * m.pf[p, 2]
+            - z_cool * m.ve[p]
+            + z_occ * m.occ[p, 2]
         )
 
-        m.obj = pyo.Objective(expr=energy_cost + terminal_cost, sense=pyo.minimize)
+        # humidity
+        m.dynamics.add(
+            m.Hum[n] ==
+            m.Hum[p]
+            + eta_occ * (m.occ[p, 1] + m.occ[p, 2])
+            - eta_vent * m.ve[p]
+        )
 
 
 
-        # -----------------------------------------------------
-        # Solve
-        # -----------------------------------------------------
-        solver = pyo.SolverFactory("gurobi")
-        solver.options["TimeLimit"] = SOLVER_TIME_LIMIT
-        solver.options["MIPGap"] = MIP_GAP
-        solver.options["OutputFlag"] = 0
-        solver.solve(m, tee=False)
+    # -----------------------------------------------------
+    # Objective: expected energy cost over nodes
+    # plus small leaf penalty to reduce myopia
+    # -----------------------------------------------------
+    decision_nodes = [n for n in all_nodes if len(children[n]) > 0]
 
-        
+    # Charge operating costs only at non-leaf nodes, i.e. nodes whose actions
+    # are followed by a modeled state transition. Leaf nodes represent the terminal
+    # predicted state of the lookahead horizon; their actions would not affect any
+    # future temperature or humidity state inside this model. Therefore, leaf nodes
+    # are used only in the terminal penalty.
+    energy_cost = sum(
+        m.q[n] * m.price[n] * (Pvent * m.ve[n] + m.pf[n, 1] + m.pf[n, 2])
+        for n in decision_nodes
+    )
 
-        # -----------------------------------------------------
-        # Extract here-and-now action from root node
-        # -----------------------------------------------------
-        p1 = pyo.value(m.pc[root, 1])
-        p2 = pyo.value(m.pc[root, 2])
+    terminal_cost = TERMINAL_TEMP_PENALTY * sum(
+        m.q[n] * ((m.Temp[n, 1] - TARGET_TEMP) ** 2 + (m.Temp[n, 2] - TARGET_TEMP) ** 2)
+        for n in leaf_nodes
+    )
 
-        # Return the commanded ventilation decision.
-        # The optimization also models the effective ventilation ve[root], which may be
-        # forced ON by humidity overrule or ventilation inertia and is used for cost and
-        # dynamics inside the lookahead model. The submitted action corresponds to the
-        # controllable command; the environment/controller logic can then enforce any
-        # overrules.
-        # !!!!!!!!!!! Apply overrule to environment part !!!!!!!!!!!!
-        v = pyo.value(m.vb[root])
-
-        if p1 is None or p2 is None or v is None:
-            raise RuntimeError("No valid decision extracted from model.")
-
-        HereAndNowActions = {
-            "HeatPowerRoom1": float(max(0.0, min(Pmax, p1))),
-            "HeatPowerRoom2": float(max(0.0, min(Pmax, p2))),
-            "VentilationON": 1 if float(v) > 0.5 else 0
-        }
-
-    except Exception:
+    m.obj = pyo.Objective(expr=energy_cost + terminal_cost, sense=pyo.minimize)
 
 
-        # =====================================================
-        # Safe fallback
-        # =====================================================
-        if T1_0 >= THigh:
-            p1_fb = 0.0
-        elif low_override_r1_0 == 1:
-            p1_fb = Pmax
-        else:
-            p1_fb = 0.0
 
-        if T2_0 >= THigh:
-            p2_fb = 0.0
-        elif low_override_r2_0 == 1:
-            p2_fb = Pmax
-        else:
-            p2_fb = 0.0
+    # -----------------------------------------------------
+    # Solve
+    # -----------------------------------------------------
+    solver = pyo.SolverFactory("gurobi")
+    solver.options["TimeLimit"] = SOLVER_TIME_LIMIT
+    solver.options["MIPGap"] = MIP_GAP
+    solver.options["OutputFlag"] = 0
+    solver.solve(m, tee=False)
 
-        if H_0 > HHigh or vent_counter_0 in [1, 2]:
-            v_fb = 1
-        else:
-            v_fb = 0
+    
 
-        HereAndNowActions = {
-            "HeatPowerRoom1": float(p1_fb),
-            "HeatPowerRoom2": float(p2_fb),
-            "VentilationON": int(v_fb)
-        }
+    # -----------------------------------------------------
+    # Extract here-and-now action from root node
+    # -----------------------------------------------------
+    p1 = pyo.value(m.pc[root, 1])
+    p2 = pyo.value(m.pc[root, 2])
+
+    # Return the commanded ventilation decision.
+    # The optimization also models the effective ventilation ve[root], which may be
+    # forced ON by humidity overrule or ventilation inertia and is used for cost and
+    # dynamics inside the lookahead model. The submitted action corresponds to the
+    # controllable command; the environment/controller logic can then enforce any
+    # overrules.
+    # !!!!!!!!!!! Apply overrule to environment part !!!!!!!!!!!!
+    v = pyo.value(m.vb[root])
+
+    if p1 is None or p2 is None or v is None:
+        raise RuntimeError("No valid decision extracted from model.")
+
+    HereAndNowActions = {
+        "HeatPowerRoom1": float(max(0.0, min(Pmax, p1))),
+        "HeatPowerRoom2": float(max(0.0, min(Pmax, p2))),
+        "VentilationON": 1 if float(v) > 0.5 else 0
+    }
 
     return HereAndNowActions

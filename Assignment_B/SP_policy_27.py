@@ -4,8 +4,8 @@ import numpy as np
 import pyomo.environ as pyo
 
 import Data.v2_SystemCharacteristics as SystemCharacteristics
-import Data.PriceProcessRestaurant as PriceProcessRestaurant
-import Data.OccupancyProcessRestaurant as OccupancyProcessRestaurant
+import Data.PriceProcessRestaurant
+import Data.OccupancyProcessRestaurant
 
 
 def select_action(state):
@@ -172,11 +172,9 @@ def select_action(state):
         Returns:
             tuple: (next_price, next_occ1, next_occ2)
         """
-        next_price = PriceProcessRestaurant.price_model(price_t, price_prev)
-        next_occ1, next_occ2 = OccupancyProcessRestaurant.next_occupancy_levels(occ1_t, occ2_t)
+        next_price = Data.price_model(price_t, price_prev)
+        next_occ1, next_occ2 = Data.OccupancyProcessRestaurant.next_occupancy_levels(occ1_t, occ2_t)
         return float(next_price), float(next_occ1), float(next_occ2)
-
-
 
     # =========================================================
     # Read observed current state
@@ -192,8 +190,27 @@ def select_action(state):
     price_prev_0 = safe_float(state.get("price_previous", 4.0), 4.0)
 
     vent_counter_0 = int(round(safe_float(state.get("vent_counter", 0), 0)))
+
+    # The low-temperature overrule controller has memory:
+    # if a room previously dropped below Tlow, the heater remains forced ON
+    # until the room temperature reaches TOK. Therefore, this latch status
+    # must be read from the environment state and cannot be inferred from
+    # the current temperature alone when Tlow <= T < TOK.
     low_override_r1_0 = 1 if safe_float(state.get("low_override_r1", 0), 0) > 0.5 else 0
     low_override_r2_0 = 1 if safe_float(state.get("low_override_r2", 0), 0) > 0.5 else 0
+
+    # Safety correction for inconsistent states:
+    # if the observed temperature is already below Tlow, the low-temperature
+    # overrule must be active regardless of the provided latch value.
+    # This does not replace the latch information; it only handles the obvious
+    # below-threshold case. In the hysteresis region Tlow <= T < TOK, the latch
+    # value from the state is still required.
+    if T1_0 < Tlow:
+        low_override_r1_0 = 1
+
+    if T2_0 < Tlow:
+        low_override_r2_0 = 1
+
     current_time = int(round(safe_float(state.get("current_time", 0), 0)))
 
     # =========================================================
@@ -533,9 +550,16 @@ def select_action(state):
         # Objective: expected energy cost over nodes
         # plus small leaf penalty to reduce myopia
         # -----------------------------------------------------
+        decision_nodes = [n for n in all_nodes if len(children[n]) > 0]
+
+        # Charge operating costs only at non-leaf nodes, i.e. nodes whose actions
+        # are followed by a modeled state transition. Leaf nodes represent the terminal
+        # predicted state of the lookahead horizon; their actions would not affect any
+        # future temperature or humidity state inside this model. Therefore, leaf nodes
+        # are used only in the terminal penalty.
         energy_cost = sum(
             m.q[n] * m.price[n] * (Pvent * m.ve[n] + m.pf[n, 1] + m.pf[n, 2])
-            for n in all_nodes
+            for n in decision_nodes
         )
 
         terminal_cost = TERMINAL_TEMP_PENALTY * sum(
@@ -563,6 +587,14 @@ def select_action(state):
         # -----------------------------------------------------
         p1 = pyo.value(m.pc[root, 1])
         p2 = pyo.value(m.pc[root, 2])
+
+        # Return the commanded ventilation decision.
+        # The optimization also models the effective ventilation ve[root], which may be
+        # forced ON by humidity overrule or ventilation inertia and is used for cost and
+        # dynamics inside the lookahead model. The submitted action corresponds to the
+        # controllable command; the environment/controller logic can then enforce any
+        # overrules.
+        # !!!!!!!!!!! Apply overrule to environment part !!!!!!!!!!!!
         v = pyo.value(m.vb[root])
 
         if p1 is None or p2 is None or v is None:

@@ -477,7 +477,7 @@ def select_action(state):
                 m.vent_logic.add(m.start_vent[n] <= 1 - m.ve[p])
 
         # existing inertia from current observed vent_counter
-        # Assignment logic: if started, must remain ON for 3 hours total. :contentReference[oaicite:5]{index=5}
+        # Assignment logic: if started, must remain ON for 3 hours total. 
         # Conservative interpretation from current counter:
         # counter 1 => ON now and next step
         # counter 2 => ON now

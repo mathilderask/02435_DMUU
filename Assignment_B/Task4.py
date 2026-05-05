@@ -24,8 +24,8 @@ It is not used when the teacher imports the policy.
 
 import numpy as np
 
-import v2_SystemCharacteristics as SystemCharacteristics
-import OccupancyProcessRestaurant as OccupancyProcessRestaurant
+import Data.v2_SystemCharacteristics as SystemCharacteristics
+import Data.OccupancyProcessRestaurant as OccupancyProcessRestaurant
 
 
 # ============================================================
@@ -455,9 +455,9 @@ if __name__ == "__main__":
     PowerMax = {1: Pmax, 2: Pmax}
 
     test_state = {
-        "T1": float(fixed["initial_temperature"]),
-        "T2": float(fixed["initial_temperature"]),
-        "H": float(fixed["initial_humidity"]),
+        "T1": float(fixed["T1"]),  # initial temperature at room 1
+        "T2": float(fixed["T2"]),  # initial temperature at room 2
+        "H": float(fixed["H"]),    # initial humidity
         "Occ1": 30.0,
         "Occ2": 20.0,
         "price_t": 4.0,

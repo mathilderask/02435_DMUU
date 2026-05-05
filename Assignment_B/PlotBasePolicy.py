@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import BasePolicyRestaurant as policy
+import BasePolicy as policy
 import Data.v2_SystemCharacteristics as SystemCharacteristics
 
 

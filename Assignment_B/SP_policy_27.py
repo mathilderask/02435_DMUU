@@ -172,7 +172,7 @@ def select_action(state):
         Returns:
             tuple: (next_price, next_occ1, next_occ2)
         """
-        next_price = Data.price_model(price_t, price_prev)
+        next_price = Data.PriceProcessRestaurant.price_model(price_t, price_prev)
         next_occ1, next_occ2 = Data.OccupancyProcessRestaurant.next_occupancy_levels(occ1_t, occ2_t)
         return float(next_price), float(next_occ1), float(next_occ2)
 
@@ -562,12 +562,7 @@ def select_action(state):
         for n in decision_nodes
     )
 
-    terminal_cost = TERMINAL_TEMP_PENALTY * sum(
-        m.q[n] * ((m.Temp[n, 1] - TARGET_TEMP) ** 2 + (m.Temp[n, 2] - TARGET_TEMP) ** 2)
-        for n in leaf_nodes
-    )
-
-    m.obj = pyo.Objective(expr=energy_cost + terminal_cost, sense=pyo.minimize)
+    m.obj = pyo.Objective(expr=energy_cost, sense=pyo.minimize)
 
 
 
@@ -582,11 +577,11 @@ def select_action(state):
 
     
 
-    # -----------------------------------------------------
+    # ----------------------------------------------
     # Extract here-and-now action from root node
     # -----------------------------------------------------
-    p1 = pyo.value(m.pc[root, 1])
-    p2 = pyo.value(m.pc[root, 2])
+    p1 = pyo.value(m.pf[root, 1])
+    p2 = pyo.value(m.pf[root, 2])
 
     # Return the commanded ventilation decision.
     # The optimization also models the effective ventilation ve[root], which may be
@@ -595,7 +590,7 @@ def select_action(state):
     # controllable command; the environment/controller logic can then enforce any
     # overrules.
     # !!!!!!!!!!! Apply overrule to environment part !!!!!!!!!!!!
-    v = pyo.value(m.vb[root])
+    v = pyo.value(m.ve[root])
 
     if p1 is None or p2 is None or v is None:
         raise RuntimeError("No valid decision extracted from model.")

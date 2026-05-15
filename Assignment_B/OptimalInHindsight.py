@@ -160,7 +160,12 @@ def build_oih_params(raw: Dict[str, Any] | None = None) -> Dict[str, Any]:
 
 def _read_csv_matrix(path: Path) -> np.ndarray:
     """Read a CSV file as a numeric matrix."""
-    return pd.read_csv(path, header=None).to_numpy(dtype=float)
+    df = pd.read_csv(path, header=None)
+    try:
+        return df.apply(pd.to_numeric, errors="raise").to_numpy(dtype=float)
+    except Exception:
+        df = pd.read_csv(path, header=0)
+        return df.apply(pd.to_numeric, errors="raise").to_numpy(dtype=float)
 
 
 def load_historical_data(data_dir: str | Path = "Data") -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -175,7 +180,7 @@ def load_historical_data(data_dir: str | Path = "Data") -> Tuple[np.ndarray, np.
     data_dir = Path(data_dir)
 
     candidates = {
-        "price": ["v2_PriceData.csv"],
+        "price": ["PriceData.csv", "v2_PriceData.csv"],
         "occ1": ["OccupancyRoom1.csv"],
         "occ2": ["OccupancyRoom2.csv"],
     }

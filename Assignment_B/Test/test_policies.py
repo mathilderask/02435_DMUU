@@ -5,7 +5,9 @@ import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-import SP_policy_27 as policy
+import SP_policy_27 as SP_policy
+import Hybrid_policy_27 as hybrid_policy
+
 from v2_Checks import check_and_sanitize_action
 
 state = {
@@ -24,7 +26,7 @@ state = {
 
 PowerMax = {1: 3.0, 2: 3.0}
 
-action = check_and_sanitize_action(policy, state, PowerMax)
+action = check_and_sanitize_action(hybrid_policy, state, PowerMax)
 
 print("Sanitized action:")
 print(action)

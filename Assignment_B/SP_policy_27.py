@@ -48,10 +48,6 @@ def select_action(state):
     SOLVER_TIME_LIMIT = 6
     MIP_GAP = 0.03
 
-    # Optional small terminal regularization
-    TARGET_TEMP = 21.0
-    TERMINAL_TEMP_PENALTY = 0.05
-
 
 
     # =========================================================

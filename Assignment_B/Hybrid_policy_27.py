@@ -591,7 +591,6 @@ def select_action(state):
     solver.options["TimeLimit"] = SOLVER_TIME_LIMIT
     solver.options["MIPGap"] = MIP_GAP
     solver.options["OutputFlag"] = 0
-    solver.solve(m, tee=False)
 
     results = solver.solve(m, tee=False)
 

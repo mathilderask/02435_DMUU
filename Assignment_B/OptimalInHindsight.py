@@ -10,8 +10,6 @@ It solves the full-day MILP with perfect knowledge of:
     - the full daily occupancy trajectory for Room 1,
     - the full daily occupancy trajectory for Room 2.
 
-It is NOT an online policy for Tasks 3-5, because it needs the entire day of
-future uncertainty before making decisions.
 """
 
 from __future__ import annotations
@@ -85,7 +83,6 @@ def _as_room_dict(value: Any, default: float) -> Dict[int, float]:
 def build_oih_params(raw: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """
     Normalize the SystemCharacteristics names into the names used by solve_day_milp().
-
     This makes the MILP robust to small naming differences between files/releases.
     """
     raw = load_raw_system_characteristics() if raw is None else dict(raw)
@@ -425,7 +422,7 @@ def solve_all_days(
 
 
 # =============================================================================
-# Optional script entry point
+# Script entry point
 # =============================================================================
 
 if __name__ == "__main__":

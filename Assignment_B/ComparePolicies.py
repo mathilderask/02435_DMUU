@@ -18,6 +18,7 @@ from typing import Any, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import gaussian_kde
 
 import BasePolicy
 import DummyPolicy
@@ -98,11 +99,11 @@ def _policy_factories(price: np.ndarray, occ1: np.ndarray, occ2: np.ndarray) -> 
     params = OptimalInHindsight.build_oih_params()
     return {
         "Dummy": DummyPolicy,
-        "Base": BasePolicy,
-        "SP": SP_policy_27,
-        "Hybrid": Hybrid_policy_27,
         "Optimal in Hindsight": _OptimalInHindsightReplayPolicy(params),
+        "SP": SP_policy_27,
         "Expected value": _ExpectedValueReplayPolicy(params, price, occ1, occ2),
+        "Base": BasePolicy,
+        "Hybrid": Hybrid_policy_27,
     }
 
 
@@ -121,11 +122,11 @@ def _parse_args() -> argparse.Namespace:
 def _policy_label(name: str) -> str:
     return {
         "Dummy": "Dummy policy",
-        "Base": "Deterministic lookahead",
-        "SP": "Stochastic programming",
-        "Hybrid": "Hybrid policy",
         "Optimal in Hindsight": "Optimal in hindsight",
-        "Expected value": "Expected value",
+        "SP": "Stochastic programming",
+        "Expected value": "Deterministic lookahead",
+        "Base": "Base - Placeholder",
+        "Hybrid": "Hybrid policy",
     }.get(name, name)
 
 
@@ -167,11 +168,11 @@ def evaluate_policies(experiments: int) -> Dict[str, Dict[str, Any]]:
 def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experiments: int) -> None:
     colors = {
         "Dummy": "#6B7280",
-        "Base": "#7A1E14",
-        "SP": "#1C97B6",
-        "Hybrid": "#E3120B",
         "Optimal in Hindsight": "#111827",
+        "SP": "#1C97B6",
         "Expected value": "#8B5CF6",
+        "Base": "#7A1E14",
+        "Hybrid": "#E3120B",
     }
 
     names = list(results.keys())
@@ -181,25 +182,46 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
     axes[0].bar([_policy_label(name) for name in names], avg_costs, color=[colors[name] for name in names])
     axes[0].set_ylabel("Average daily cost")
     axes[0].set_title(f"Policy comparison across {experiments} experiments")
+    axes[0].tick_params(axis="x", labelrotation=20)
+    for label in axes[0].get_xticklabels():
+        label.set_ha("right")
     axes[0].grid(True, axis="y", alpha=0.3)
 
+    # Histogram outlines of daily costs (one per policy)
     all_costs = np.concatenate([results[name]["daily_costs"] for name in names if len(results[name]["daily_costs"])])
     if len(all_costs) > 0:
-        bins = np.histogram_bin_edges(all_costs, bins="auto")
+        handles: Dict[str, Any] = {}
         for name in names:
-            axes[1].hist(
-                results[name]["daily_costs"],
+            data = results[name]["daily_costs"]
+            if len(data) == 0:
+                continue
+            # plot histogram outline for this policy
+            bins = np.histogram_bin_edges(data, bins="auto")
+            _, _, patches = axes[1].hist(
+                data,
                 bins=bins,
                 histtype="step",
                 linewidth=2.0,
-                alpha=0.9,
                 label=_policy_label(name),
                 color=colors[name],
             )
+            handles[name] = patches[0]
     axes[1].set_xlabel("Daily electricity cost")
     axes[1].set_ylabel("Frequency")
     axes[1].set_title("Histogram of daily costs")
-    axes[1].legend(ncol=2)
+    # Enforce specific legend order preferred by the user
+    desired_order = [
+        "Dummy",
+        "Optimal in Hindsight",
+        "SP",
+        "Expected value",
+        "Base",
+        "Hybrid",
+    ]
+    legend_handles = [handles[n] for n in desired_order if n in handles]
+    legend_labels = [_policy_label(n) for n in desired_order if n in handles]
+    if legend_handles:
+        axes[1].legend(legend_handles, legend_labels, ncol=2)
     axes[1].grid(True, alpha=0.3)
 
     plots_dir = Path(output_path).parent

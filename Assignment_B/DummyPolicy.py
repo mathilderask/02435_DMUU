@@ -23,9 +23,9 @@ def select_action(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Return the dummy here-and-now action.
 
-    This policy intentionally does not use the state. If temperature or
-    humidity constraints are violated, the environment/checks should apply
-    the built-in overrule logic.
+    This policy intentionally ignores the state and always returns zero
+    heating and zero ventilation. Any comfort or safety intervention is
+    handled by the environment's overrule controllers.
     """
     HereAndNowActions = {
         "HeatPowerRoom1": 0.0,

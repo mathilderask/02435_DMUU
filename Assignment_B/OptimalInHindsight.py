@@ -10,8 +10,6 @@ It solves the full-day MILP with perfect knowledge of:
     - the full daily occupancy trajectory for Room 1,
     - the full daily occupancy trajectory for Room 2.
 
-It is NOT an online policy for Tasks 3-5, because it needs the entire day of
-future uncertainty before making decisions.
 """
 
 from __future__ import annotations
@@ -85,7 +83,6 @@ def _as_room_dict(value: Any, default: float) -> Dict[int, float]:
 def build_oih_params(raw: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """
     Normalize the SystemCharacteristics names into the names used by solve_day_milp().
-
     This makes the MILP robust to small naming differences between files/releases.
     """
     raw = load_raw_system_characteristics() if raw is None else dict(raw)
@@ -160,7 +157,12 @@ def build_oih_params(raw: Dict[str, Any] | None = None) -> Dict[str, Any]:
 
 def _read_csv_matrix(path: Path) -> np.ndarray:
     """Read a CSV file as a numeric matrix."""
-    return pd.read_csv(path, header=None).to_numpy(dtype=float)
+    df = pd.read_csv(path, header=None)
+    try:
+        return df.apply(pd.to_numeric, errors="raise").to_numpy(dtype=float)
+    except Exception:
+        df = pd.read_csv(path, header=0)
+        return df.apply(pd.to_numeric, errors="raise").to_numpy(dtype=float)
 
 
 def load_historical_data(data_dir: str | Path = "Data") -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -175,7 +177,7 @@ def load_historical_data(data_dir: str | Path = "Data") -> Tuple[np.ndarray, np.
     data_dir = Path(data_dir)
 
     candidates = {
-        "price": ["v2_PriceData.csv"],
+        "price": ["PriceData.csv", "v2_PriceData.csv"],
         "occ1": ["OccupancyRoom1.csv"],
         "occ2": ["OccupancyRoom2.csv"],
     }
@@ -420,7 +422,7 @@ def solve_all_days(
 
 
 # =============================================================================
-# Optional script entry point
+# Script entry point
 # =============================================================================
 
 if __name__ == "__main__":

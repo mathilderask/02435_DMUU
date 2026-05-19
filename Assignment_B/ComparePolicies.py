@@ -18,13 +18,12 @@ from typing import Any, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import gaussian_kde
 
-import BasePolicy
-import DummyPolicy
+import Dummy_policy_27
 import Hybrid_policy_27
-import OptimalInHindsight
+import OIH_policy_27
 import SP_policy_27
+import TwoStageSP_policy_27
 from SimulationEnvironment import RestaurantSimulationEnvironment
 
 
@@ -59,7 +58,7 @@ class _OptimalInHindsightReplayPolicy:
         self._replay = _ReplayPolicy(np.zeros((1, 3), dtype=float))
 
     def prepare_episode(self, price: np.ndarray, occ1: np.ndarray, occ2: np.ndarray) -> None:
-        solution = OptimalInHindsight.solve_day_milp(price, occ1, occ2, self.params, output_flag=0)
+        solution = OIH_policy_27.solve_day_milp(price, occ1, occ2, self.params, output_flag=0)
         actions = np.column_stack([solution["p1"], solution["p2"], solution["v"]])
         self._replay = _ReplayPolicy(actions)
 
@@ -76,7 +75,7 @@ class _ExpectedValueReplayPolicy:
         self.occ1_mean = np.mean(occ1, axis=0)
         self.occ2_mean = np.mean(occ2, axis=0)
         self._replay = _ReplayPolicy(np.zeros((1, 3), dtype=float))
-        self._solution = OptimalInHindsight.solve_day_milp(
+        self._solution = OIH_policy_27.solve_day_milp(
             self.price_mean,
             self.occ1_mean,
             self.occ2_mean,
@@ -96,13 +95,13 @@ def _load_experiment_data() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 
 def _policy_factories(price: np.ndarray, occ1: np.ndarray, occ2: np.ndarray) -> Dict[str, Any]:
-    params = OptimalInHindsight.build_oih_params()
+    params = OIH_policy_27.build_oih_params()
     return {
-        "Dummy": DummyPolicy,
+        "Dummy": Dummy_policy_27,
         "Optimal in Hindsight": _OptimalInHindsightReplayPolicy(params),
         "SP": SP_policy_27,
+        "TwoStageSP": TwoStageSP_policy_27,
         "Expected value": _ExpectedValueReplayPolicy(params, price, occ1, occ2),
-        "Base": BasePolicy,
         "Hybrid": Hybrid_policy_27,
     }
 
@@ -124,8 +123,8 @@ def _policy_label(name: str) -> str:
         "Dummy": "Dummy policy",
         "Optimal in Hindsight": "Optimal in hindsight",
         "SP": "Stochastic programming",
+        "TwoStageSP": "Two-stage SP",
         "Expected value": "Deterministic lookahead",
-        "Base": "Base - Placeholder",
         "Hybrid": "Hybrid policy",
     }.get(name, name)
 
@@ -170,8 +169,8 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
         "Dummy": "#6B7280",
         "Optimal in Hindsight": "#111827",
         "SP": "#1C97B6",
+        "TwoStageSP": "#4F46E5",
         "Expected value": "#8B5CF6",
-        "Base": "#7A1E14",
         "Hybrid": "#E3120B",
     }
 
@@ -214,8 +213,8 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
         "Dummy",
         "Optimal in Hindsight",
         "SP",
+        "TwoStageSP",
         "Expected value",
-        "Base",
         "Hybrid",
     ]
     legend_handles = [handles[n] for n in desired_order if n in handles]

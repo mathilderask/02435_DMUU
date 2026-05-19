@@ -375,9 +375,9 @@ def evaluate_policy(policy: Any, *, day: int = 0, seed: Optional[int] = None) ->
 
 
 if __name__ == "__main__":
-    import DummyPolicy
+    import Dummy_policy_27
 
     env = RestaurantSimulationEnvironment(day=0, seed=0)
-    result = env.evaluate_policy(DummyPolicy)
+    result = env.evaluate_policy(Dummy_policy_27)
     print(f"Total cost: {result['total_cost']:.2f}")
     print(f"Final temperatures: {result['final_temperature_room1']:.2f}, {result['final_temperature_room2']:.2f}")

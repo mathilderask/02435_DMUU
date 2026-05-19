@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-import Dummy_policy_27 as policy
+import Policies.Dummy_policy_27 as policy
 import Data.v2_SystemCharacteristics as SystemCharacteristics
 
 

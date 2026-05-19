@@ -19,11 +19,11 @@ from typing import Any, Dict
 import matplotlib.pyplot as plt
 import numpy as np
 
-import Dummy_policy_27
-import Hybrid_policy_27
-import OIH_policy_27
-import SP_policy_27
-import TwoStageSP_policy_27
+import Policies.Dummy_policy_27 as Dummy_policy_27
+import Policies.Hybrid_policy_27 as Hybrid_policy_27
+import Policies.OIH_policy_27 as OIH_policy_27
+import Policies.SP_policy_27 as SP_policy_27
+import Policies.TwoStageSP_policy_27 as TwoStageSP_policy_27
 from SimulationEnvironment import RestaurantSimulationEnvironment
 
 

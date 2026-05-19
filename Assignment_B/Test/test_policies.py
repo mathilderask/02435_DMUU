@@ -5,8 +5,8 @@ import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-import SP_policy_27 as SP_policy
-import Hybrid_policy_27 as hybrid_policy
+import Policies.SP_policy_27 as SP_policy
+import Policies.Hybrid_policy_27 as hybrid_policy
 
 from v2_Checks import check_and_sanitize_action
 

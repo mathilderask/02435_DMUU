@@ -26,7 +26,13 @@ state = {
 
 PowerMax = {1: 3.0, 2: 3.0}
 
-action = check_and_sanitize_action(hybrid_policy, state, PowerMax)
+action_SP = check_and_sanitize_action(SP_policy, state, PowerMax)
+action_hybrid = check_and_sanitize_action(hybrid_policy, state, PowerMax)
 
-print("Sanitized action:")
-print(action)
+print(" ")
+print("Sanitized action SP:")
+print(action_SP)
+
+print(" ")
+print("Sanitized action Hybrid:")
+print(action_hybrid)

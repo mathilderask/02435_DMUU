@@ -399,60 +399,82 @@ def plot_objective_convergence(results: Dict[str, Dict], centralized_objective: 
     plt.axhline(
         centralized_objective,
         linestyle="--",
-        label="Centralized optimum",
+        label="Optimal Objective",
     )
 
     plt.xlabel("Iteration")
-    plt.ylabel("System objective value")
+    plt.ylabel("Objective value")
     plt.title("Objective value across distributed iterations")
     plt.grid(True)
     plt.legend()
     save_plot("objective_convergence_all_steps.png")
 
 
-def plot_multiplier_evolution(results: Dict[str, Dict]) -> None:
-    for label, result in results.items():
+def plot_multiplier_evolution_combined(results: Dict[str, Dict]) -> None:
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10), sharex=True)
+    axes = axes.flatten()
+
+    for ax, (label, result) in zip(axes, results.items()):
         lambdas = result["lambda"]
         H = lambdas.shape[1]
 
-        plt.figure(figsize=(10, 6))
         for t in range(H):
-            plt.plot(
+            ax.plot(
                 np.arange(0, N_ITERATIONS + 1),
                 lambdas[:, t],
-                label=f"t={t}",
+                label=f"t={t}"
             )
 
-        plt.xlabel("Iteration")
-        plt.ylabel(r"Multiplier $\lambda_t$")
-        plt.title(f"Multiplier evolution, alpha = {label}")
-        plt.grid(True)
-        plt.legend(ncol=2, fontsize=8)
-        safe_label = str(label).replace(".", "p")
-        save_plot(f"multiplier_evolution_alpha_{safe_label}.png")
+        ax.set_title(f"alpha = {label}")
+        ax.set_xlabel("Iteration")
+        ax.set_ylabel(r"$\lambda_t$")
+        ax.grid(True)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=10)
+
+    fig.suptitle("Multiplier evolution for all step-size choices", fontsize=16)
+    fig.tight_layout(rect=[0, 0.06, 1, 0.95])
+
+    plt.savefig(
+        os.path.join(OUTPUT_DIR, "multiplier_evolution_combined.png"),
+        dpi=300
+    )
+    plt.show()
 
 
-def plot_violation_evolution(results: Dict[str, Dict]) -> None:
-    for label, result in results.items():
+def plot_violation_evolution_combined(results: Dict[str, Dict]) -> None:
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10), sharex=True)
+    axes = axes.flatten()
+
+    for ax, (label, result) in zip(axes, results.items()):
         violations = result["violation"]
         H = violations.shape[1]
 
-        plt.figure(figsize=(10, 6))
         for t in range(H):
-            plt.plot(
+            ax.plot(
                 np.arange(1, N_ITERATIONS + 1),
                 violations[:, t],
-                label=f"t={t}",
+                label=f"t={t}"
             )
 
-        plt.axhline(0.0, linestyle="--")
-        plt.xlabel("Iteration")
-        plt.ylabel(r"$\sum_n p_{n,t} - P^{mall}$")
-        plt.title(f"Mall power-limit violation, alpha = {label}")
-        plt.grid(True)
-        plt.legend(ncol=2, fontsize=8)
-        safe_label = str(label).replace(".", "p")
-        save_plot(f"violation_evolution_alpha_{safe_label}.png")
+        ax.axhline(0.0, linestyle="--")
+        ax.set_title(f"alpha = {label}")
+        ax.set_xlabel("Iteration")
+        ax.set_ylabel(r"$\sum_n p_{n,t} - P^{mall}$")
+        ax.grid(True)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=10)
+
+    fig.suptitle("Mall power-limit violation for all step-size choices", fontsize=16)
+    fig.tight_layout(rect=[0, 0.06, 1, 0.95])
+
+    plt.savefig(
+        os.path.join(OUTPUT_DIR, "violation_evolution_combined.png"),
+        dpi=300
+    )
+    plt.show()
 
 
 def plot_energy_per_store(result: Dict, label: str) -> None:
@@ -534,8 +556,8 @@ def main() -> None:
 
     print("\nCreating plots...")
     plot_objective_convergence(results, centralized_objective)
-    plot_multiplier_evolution(results)
-    plot_violation_evolution(results)
+    plot_multiplier_evolution_combined(results)
+    plot_violation_evolution_combined(results)
     plot_energy_per_store(results["adaptive"], label="adaptive")
 
     save_summary_tables(results, centralized_objective, centralized_p)

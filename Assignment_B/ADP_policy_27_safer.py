@@ -41,20 +41,20 @@ import Data.OccupancyProcessRestaurant as OccupancyProcessRestaurant
 # Trained value-function coefficients
 # =========================================================
 # Replace this dictionary with the output printed by train_adp().
-# Each vector has 16 entries and corresponds to FEATURE_NAMES.
+# Each vector has 14 entries and corresponds to FEATURE_NAMES.
 # --- ADP_THETA_START ---
 ADP_THETA = {
-    0: [442.0045116002, 50.2529046865, -26.6751891622, 0.3144947242, -0.4499453463, 1.3055275209, 2.2874883705, -15.9320166156, -7.6040110703, -8.0217422194, -0.1812472072, -0.0000000000, 0.0000000000, 8.8247637554, -2.7357984054, 9.4896796172],
-    1: [463.5205472076, 43.5205591533, -20.2378459685, 0.0672728485, -0.0255461296, 1.2267623008, 0.8634977868, -8.8092709780, -16.3651783512, -2.9125597217, -9.9674016097, 0.0000000000, 0.0000000000, 5.6596960703, 8.3899235521, 14.9073546977],
-    2: [226.4165985679, 39.9161556364, -18.3635280550, 0.3292463614, 0.3176282553, 0.9014357660, 1.8656300543, -10.9858457059, -3.9674478214, -1.6975940964, 1.7301206113, -0.0000000000, 0.0000000000, 7.9755150184, 6.1761247437, 7.6404778704],
-    3: [270.3461129527, 38.9001007926, -18.8324402144, -0.1492389448, 0.2781614373, 0.7238696361, 2.1928255073, -6.8458283800, -9.1067508755, -2.1845735372, -3.6066504737, 0.0000000000, -0.0000000000, 5.2441191918, 16.9903249248, 13.4973162996],
-    4: [303.0064460713, 35.2425540778, -16.9698499911, -0.4224367011, 0.1093315365, 0.5981983008, 0.2512017875, -7.6414498190, -8.7122496046, -2.7264553280, -4.9627249095, 0.0000000000, 0.0000000000, 4.7852657451, 13.4589511786, 7.7356685749],
-    5: [267.6607734016, 29.4384721409, -14.6695722855, -0.1735951656, 0.9736692929, 0.2575587836, 1.6352451910, -7.5475936740, -7.4073847982, -3.9169551537, -1.4707517461, 0.0000000000, -0.0000000000, -1.4728444575, 12.8618835210, 4.1945311502],
-    6: [49.2967675572, 21.5925807111, -11.1580041038, 0.4160447786, -0.0090169473, 0.6270070490, 0.9595423842, -0.7335257252, -4.9112536984, 3.0421984110, -3.6078186855, 0.0000000000, 0.0000000000, 2.3789719236, 17.6449733938, 29.3215922244],
-    7: [-26.3172613984, 18.1195273026, -8.3019387987, 0.5937198633, 0.3767343425, 0.4017041549, 1.3294314143, -3.0799257591, 0.4887073601, -1.3280935385, 3.7326596090, 0.0000000000, 0.0000000000, 3.0064007481, 22.8859228437, 23.9268935158],
-    8: [-17.9160574207, 13.8496545402, -4.0425807535, 0.0775414309, 0.2002180017, 0.1740165538, 0.7763721270, -1.0738861554, -0.5666394930, 1.5186819833, 0.3048698389, -0.0000000000, 0.0000000000, 4.5213002723, 21.7746380209, 14.0458617785],
-    9: [-24.2066472730, 6.2495956745, 0.4692505974, 0.0006986223, -0.0093278174, 0.0553048128, 0.1604211424, 0.1274583410, -0.3130639713, 0.0773775556, 0.3268094221, 0.0000000000, -0.0000000000, 1.1158135748, 13.5884852971, 12.0482973127],
-    10: [0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000],
+    0: [-128.4080699542, 48.4636137843, -27.4724035876, 0.8972895423, 0.7368029632, 0.5770753779, 3.9925908877, 15.5107385628, 6.7046851928, 0.0000000000, 0.0000000000, 7.2936934463, 6.8913657138, 17.2959421607],
+    1: [-106.3505311259, 44.7128081729, -23.1403415815, 0.8168586983, -0.5653723681, 0.5249174901, 1.7564126922, 7.2742556248, 9.1561616799, 0.0000000000, 0.0000000000, 10.1953033268, 27.9835609489, 15.9544735164],
+    2: [-144.3376381590, 42.9432792599, -21.8817844556, 0.4842681982, 0.3156935353, 0.9302515539, 1.8078588991, 9.7467061042, 6.8033916626, 0.0000000000, 0.0000000000, 1.5115645727, 17.6731366615, 22.9439472794],
+    3: [-143.6846620424, 41.2317855064, -21.0399032146, 0.1875015765, 0.4618391544, 1.1437503861, -0.2588224536, 6.6576121166, 2.4728005216, 0.0000000000, 0.0000000000, 2.8207172765, 28.3272598382, 21.9147082171],
+    4: [-87.0109054627, 37.9244974482, -19.2811521935, -0.3829739511, -0.1360584571, 0.6781875103, 0.5940601398, 4.8069554528, 5.5585202711, 0.0000000000, 0.0000000000, 6.0550073129, 27.9832831717, 14.5382456255],
+    5: [-80.8292005112, 29.5078842226, -14.7350420638, 0.0628266041, 0.6105671702, 0.3418142272, 2.4221890518, 4.4022004557, 5.9322928943, 0.0000000000, 0.0000000000, 2.9721920810, 11.7787269384, 12.3424868869],
+    6: [-70.3523005026, 22.4826209823, -11.7474163817, 0.5554760193, -0.3561159824, 0.5624090850, 0.9853659213, 3.4038244654, 2.9678042140, 0.0000000000, 0.0000000000, 1.9999956499, 15.9766414569, 24.9744311014],
+    7: [-75.2816994777, 19.0281248330, -8.7878705307, 0.5907577011, 0.0066915339, 0.3663053545, 1.4936349631, 3.0958420720, 3.0439620684, 0.0000000000, 0.0000000000, 3.1413174868, 20.9242963181, 20.3192053782],
+    8: [-54.8813193168, 13.9907485138, -4.1117343582, 0.0693865970, 0.0812597615, 0.2066905038, 0.6946278632, 3.2047119373, 0.9207931763, 0.0000000000, 0.0000000000, 4.4227277444, 20.8181404144, 13.9821195729],
+    9: [-28.0414022293, 6.2580386353, 0.4566994973, 0.0000920494, -0.0111777335, 0.0523733625, 0.1644808435, -0.0429451739, 0.6757141610, 0.0000000000, 0.0000000000, 1.0663730996, 13.3207609259, 12.1860714911],
+    10: [0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000],
 }
 # --- ADP_THETA_END ---
 
@@ -67,8 +67,6 @@ FEATURE_NAMES = [
     "occ2_t",
     "H_t",
     "humidity_excess",
-    "T1_t",
-    "T2_t",
     "T1_deficit_to_TOK",
     "T2_deficit_to_TOK",
     "T1_excess_above_Thigh",
@@ -149,8 +147,6 @@ def feature_vector(state):
         occ2,
         H,
         max(0.0, H - DATA["HHigh"]),
-        T1,
-        T2,
         max(0.0, DATA["TOK"] - T1),
         max(0.0, DATA["TOK"] - T2),
         max(0.0, T1 - DATA["THigh"]),
@@ -191,12 +187,6 @@ def select_action(state):
     The feature vector contains positive-part features for humidity excess,
     temperature deficits, and high-temperature excess.
     """
-#    print("\nADP DEBUG - raw simulator state:")
-#    print("type:", type(state))
-#    print("keys:", list(state.keys()) if hasattr(state, "keys") else "no keys() method")
-#    print("state:", state)
-
-
     Pmax = DATA["Pmax"]
     Pvent = DATA["Pvent"]
     Tlow = DATA["Tlow"]
@@ -453,15 +443,13 @@ def select_action(state):
                 + theta_next[4] * occ2_next
                 + theta_next[5] * m.H_next[k]
                 + theta_next[6] * m.h_excess[k]
-                + theta_next[7] * m.T1_next[k]
-                + theta_next[8] * m.T2_next[k]
-                + theta_next[9] * m.t1_deficit[k]
-                + theta_next[10] * m.t2_deficit[k]
-                + theta_next[11] * m.t1_high_excess[k]
-                + theta_next[12] * m.t2_high_excess[k]
-                + theta_next[13] * vent_counter_next_expr
-                + theta_next[14] * m.low1_next[k]
-                + theta_next[15] * m.low2_next[k]
+                + theta_next[7] * m.t1_deficit[k]
+                + theta_next[8] * m.t2_deficit[k]
+                + theta_next[9] * m.t1_high_excess[k]
+                + theta_next[10] * m.t2_high_excess[k]
+                + theta_next[11] * vent_counter_next_expr
+                + theta_next[12] * m.low1_next[k]
+                + theta_next[13] * m.low2_next[k]
             )
 
         m.obj = pyo.Objective(expr=immediate_cost + future_value, sense=pyo.minimize)
@@ -517,7 +505,7 @@ def select_action(state):
 TRAINING_RNG_SEED = 27
 N_STATE_SAMPLES = 120       # sampled states per stage
 N_TRAIN_NEXT_SAMPLES = 8    # uncertainty samples per Bellman target
-RIDGE = 0.0  # ordinary least squares in the base version
+RIDGE = 1e-2  # ridge regularization to stabilize correlated ADP features
 TRAINING_BIG_M = 100.0
 TRAINING_SOLVER_TIME_LIMIT = 2
 
@@ -1121,15 +1109,13 @@ def solve_one_step_training_target(state, theta_next):
             + theta_next[4] * occ2_next
             + theta_next[5] * m.H_next[k]
             + theta_next[6] * m.h_excess[k]
-            + theta_next[7] * m.T1_next[k]
-            + theta_next[8] * m.T2_next[k]
-            + theta_next[9] * m.t1_deficit[k]
-            + theta_next[10] * m.t2_deficit[k]
-            + theta_next[11] * m.t1_high_excess[k]
-            + theta_next[12] * m.t2_high_excess[k]
-            + theta_next[13] * vent_counter_next_expr
-            + theta_next[14] * m.low1_next[k]
-            + theta_next[15] * m.low2_next[k]
+            + theta_next[7] * m.t1_deficit[k]
+            + theta_next[8] * m.t2_deficit[k]
+            + theta_next[9] * m.t1_high_excess[k]
+            + theta_next[10] * m.t2_high_excess[k]
+            + theta_next[11] * vent_counter_next_expr
+            + theta_next[12] * m.low1_next[k]
+            + theta_next[13] * m.low2_next[k]
         )
 
     m.obj = pyo.Objective(expr=immediate_cost + future_value, sense=pyo.minimize)
@@ -1266,15 +1252,7 @@ def print_theta_for_copy(theta):
 
 
 def update_adp_theta_in_file(theta, file_path=None):
-    """
-    Replace the ADP_THETA block in this file.
-
-    This is only used when running:
-        python ADP_policy_27_empirical_forward_clean.py --train-and-update
-
-    The submitted policy only needs select_action(state), so this update logic
-    does not affect the teacher's evaluator.
-    """
+    """Replace the complete ADP_THETA marker block in this file."""
     if file_path is None:
         file_path = Path(__file__)
     else:
@@ -1283,9 +1261,10 @@ def update_adp_theta_in_file(theta, file_path=None):
     text = file_path.read_text(encoding="utf-8")
     new_theta_code = format_theta_dict(theta)
 
+    # Replace everything between the markers, including comments.
     pattern = (
         r"# --- ADP_THETA_START ---\n"
-        r"ADP_THETA = \{.*?\}\n"
+        r".*?"
         r"# --- ADP_THETA_END ---"
     )
 
@@ -1299,13 +1278,12 @@ def update_adp_theta_in_file(theta, file_path=None):
 
     if n_replacements != 1:
         raise RuntimeError(
-            "Could not uniquely locate ADP_THETA block. "
-            "Check that the ADP_THETA_START and ADP_THETA_END markers are present."
+            f"Could not uniquely locate ADP_THETA marker block. "
+            f"Found {n_replacements} matching blocks."
         )
 
     file_path.write_text(updated, encoding="utf-8")
     print(f"\nUpdated ADP_THETA in: {file_path}")
-
 
 
 def debug_value_predictions(n_samples=50, seed=123):

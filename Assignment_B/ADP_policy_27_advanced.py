@@ -1,5 +1,5 @@
 """
-Task 4: Approximate Dynamic Programming policy with empirical forward-pass training.
+Task 4: Approximate Dynamic Programming policy with advanced lecture-aligned training.
 
 This file contains both:
 
@@ -13,7 +13,7 @@ This file contains both:
 
 Workflow:
     1. Run this file locally with:
-           python ADP_policy_27_empirical_forward_clean.py --train-and-update
+           python ADP_policy_27_advanced.py --train-and-update
 
        This trains the value function and automatically replaces the
        ADP_THETA dictionary in this file.
@@ -41,20 +41,20 @@ import Data.OccupancyProcessRestaurant as OccupancyProcessRestaurant
 # Trained value-function coefficients
 # =========================================================
 # Replace this dictionary with the output printed by train_adp().
-# Each vector has 16 entries and corresponds to FEATURE_NAMES.
+# Each vector has 14 entries and corresponds to FEATURE_NAMES.
 # --- ADP_THETA_START ---
 ADP_THETA = {
-    0: [442.0045116002, 50.2529046865, -26.6751891622, 0.3144947242, -0.4499453463, 1.3055275209, 2.2874883705, -15.9320166156, -7.6040110703, -8.0217422194, -0.1812472072, -0.0000000000, 0.0000000000, 8.8247637554, -2.7357984054, 9.4896796172],
-    1: [463.5205472076, 43.5205591533, -20.2378459685, 0.0672728485, -0.0255461296, 1.2267623008, 0.8634977868, -8.8092709780, -16.3651783512, -2.9125597217, -9.9674016097, 0.0000000000, 0.0000000000, 5.6596960703, 8.3899235521, 14.9073546977],
-    2: [226.4165985679, 39.9161556364, -18.3635280550, 0.3292463614, 0.3176282553, 0.9014357660, 1.8656300543, -10.9858457059, -3.9674478214, -1.6975940964, 1.7301206113, -0.0000000000, 0.0000000000, 7.9755150184, 6.1761247437, 7.6404778704],
-    3: [270.3461129527, 38.9001007926, -18.8324402144, -0.1492389448, 0.2781614373, 0.7238696361, 2.1928255073, -6.8458283800, -9.1067508755, -2.1845735372, -3.6066504737, 0.0000000000, -0.0000000000, 5.2441191918, 16.9903249248, 13.4973162996],
-    4: [303.0064460713, 35.2425540778, -16.9698499911, -0.4224367011, 0.1093315365, 0.5981983008, 0.2512017875, -7.6414498190, -8.7122496046, -2.7264553280, -4.9627249095, 0.0000000000, 0.0000000000, 4.7852657451, 13.4589511786, 7.7356685749],
-    5: [267.6607734016, 29.4384721409, -14.6695722855, -0.1735951656, 0.9736692929, 0.2575587836, 1.6352451910, -7.5475936740, -7.4073847982, -3.9169551537, -1.4707517461, 0.0000000000, -0.0000000000, -1.4728444575, 12.8618835210, 4.1945311502],
-    6: [49.2967675572, 21.5925807111, -11.1580041038, 0.4160447786, -0.0090169473, 0.6270070490, 0.9595423842, -0.7335257252, -4.9112536984, 3.0421984110, -3.6078186855, 0.0000000000, 0.0000000000, 2.3789719236, 17.6449733938, 29.3215922244],
-    7: [-26.3172613984, 18.1195273026, -8.3019387987, 0.5937198633, 0.3767343425, 0.4017041549, 1.3294314143, -3.0799257591, 0.4887073601, -1.3280935385, 3.7326596090, 0.0000000000, 0.0000000000, 3.0064007481, 22.8859228437, 23.9268935158],
-    8: [-17.9160574207, 13.8496545402, -4.0425807535, 0.0775414309, 0.2002180017, 0.1740165538, 0.7763721270, -1.0738861554, -0.5666394930, 1.5186819833, 0.3048698389, -0.0000000000, 0.0000000000, 4.5213002723, 21.7746380209, 14.0458617785],
-    9: [-24.2066472730, 6.2495956745, 0.4692505974, 0.0006986223, -0.0093278174, 0.0553048128, 0.1604211424, 0.1274583410, -0.3130639713, 0.0773775556, 0.3268094221, 0.0000000000, -0.0000000000, 1.1158135748, 13.5884852971, 12.0482973127],
-    10: [0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000],
+    0: [-23.7753343845, 16.8105366061, -12.3818135787, 0.6223253965, 1.6643542114, 0.9651283515, -3.5173730939, -1.2769159006, -5.6636454710, 0.0000000000, 0.0000000000, 0.6981371467, 0.4749416371, 1.6426806037, 0.0283033831, 0.0070930278, -1.0642334302, 5.1196588485, 18.0810055142],
+    1: [-43.2196991570, 19.2706640644, -13.4452274704, 0.8713741705, 1.0124154576, 0.9697301906, -4.4719944546, 3.9192242495, -1.4338291535, 0.0000000000, 0.0000000000, 0.7209552229, 0.8339363917, 0.7741093619, -0.1966006866, 0.0396505983, 2.0247654509, 9.2584179536, 9.7645574815],
+    2: [-56.8763399986, 14.4873910321, -6.8620410667, 0.2414082995, 1.3299872055, 0.7617740110, -0.8421141139, 2.3288923640, 1.8210703956, 0.0000000000, 0.0000000000, 0.3252015624, 0.3348495314, 0.5377977406, -0.0106186429, -0.0350394001, 0.4688009698, 8.3469728109, 5.0916965408],
+    3: [-68.4017090957, 10.4008207025, -4.7487104750, -0.2159527388, 1.6252187915, 0.8758219899, -1.2807165345, 0.6677037673, 2.1703064772, 0.0000000000, 0.0000000000, 0.1426030885, 0.3253742438, 0.7545510160, -0.0264682252, -0.1403180763, 1.3557614427, 13.7298085574, 10.9793295964],
+    4: [-38.0008813335, 10.2578331766, -5.2096837212, -0.0049958208, 0.2021853365, 0.7406619015, -1.2285356419, -0.6091028034, -1.0295104108, 0.0000000000, 0.0000000000, 0.0812325118, 0.7151799192, 0.3765072331, -0.0244701019, -0.0110797870, 1.7541110226, 11.5098624778, 11.0229797975],
+    5: [-23.7579082261, 6.5391364067, -2.6964126339, 0.0992883255, 0.1326124819, 0.3029962554, -0.3365883002, -2.1509528192, 0.0761971802, 0.0000000000, 0.0000000000, 0.1234639183, 0.3835429933, 0.3340623372, 0.0309350586, -0.0397064419, 1.4151329373, 10.2634057502, 15.8195049991],
+    6: [-15.8838416294, 2.7399718376, -0.7506668630, 0.1591069817, 0.3276322366, 0.0231347125, 0.5311238621, -0.5987190513, -2.7835963766, 0.0000000000, 0.0000000000, -0.0800683751, 0.8159921676, 0.0059384640, -0.0245015664, 0.1526923732, 0.7085083842, 16.0253664755, 6.6200607832],
+    7: [2.5408643654, 3.7336239058, -2.9420939671, -0.3375275513, 0.5186011821, -0.0510755383, -1.3495998424, -2.7936933426, 1.1004123005, 0.0000000000, 0.0000000000, 0.6115571716, 0.5164936602, 0.3197549244, 0.0569484696, -0.0811675736, 2.5851631080, 3.1893644396, 16.8268529485],
+    8: [-10.8395989777, 6.3444190349, -2.3244228822, -0.2835166746, -0.0451915650, 0.1685432743, -0.8216027133, -0.3553993136, -2.1809458709, 0.0000000000, 0.0000000000, 0.1995976684, 0.4188548744, 0.7131332563, -0.0190076462, 0.0143872947, 3.7397641219, 9.4825248881, 11.2178837747],
+    9: [-3.8232261251, 3.3086468780, -0.0299532861, -0.2831225876, -0.0202592606, 0.0366615647, -0.5680880360, -0.7636382429, 0.9635786149, 0.0000000000, 0.0000000000, 0.2695251260, -0.1734550217, 0.2098281217, 0.0553293071, -0.0648973961, 2.9806858389, 10.8810124841, 12.1146281934],
+    10: [0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000],
 }
 # --- ADP_THETA_END ---
 
@@ -67,12 +67,15 @@ FEATURE_NAMES = [
     "occ2_t",
     "H_t",
     "humidity_excess",
-    "T1_t",
-    "T2_t",
     "T1_deficit_to_TOK",
     "T2_deficit_to_TOK",
     "T1_excess_above_Thigh",
     "T2_excess_above_Thigh",
+    "price_x_humidity_excess",
+    "price_x_T1_deficit",
+    "price_x_T2_deficit",
+    "occ1_x_T1_deficit",
+    "occ2_x_T2_deficit",
     "vent_counter",
     "low_override_r1",
     "low_override_r2",
@@ -91,6 +94,7 @@ def get_problem_data():
     return {
         "Pmax": float(params["heating_max_power"]),
         "Pvent": float(params["ventilation_power"]),
+        "Uvent": int(params.get("vent_min_up_time", 3)),
         "Tlow": float(params["temp_min_comfort_threshold"]),
         "TOK": float(params["temp_OK_threshold"]),
         "THigh": float(params["temp_max_comfort_threshold"]),
@@ -141,6 +145,12 @@ def feature_vector(state):
     low1 = float(state["low_override_r1"])
     low2 = float(state["low_override_r2"])
 
+    h_excess = max(0.0, H - DATA["HHigh"])
+    t1_deficit = max(0.0, DATA["TOK"] - T1)
+    t2_deficit = max(0.0, DATA["TOK"] - T2)
+    t1_high = max(0.0, T1 - DATA["THigh"])
+    t2_high = max(0.0, T2 - DATA["THigh"])
+
     return np.array([
         1.0,
         price,
@@ -148,13 +158,16 @@ def feature_vector(state):
         occ1,
         occ2,
         H,
-        max(0.0, H - DATA["HHigh"]),
-        T1,
-        T2,
-        max(0.0, DATA["TOK"] - T1),
-        max(0.0, DATA["TOK"] - T2),
-        max(0.0, T1 - DATA["THigh"]),
-        max(0.0, T2 - DATA["THigh"]),
+        h_excess,
+        t1_deficit,
+        t2_deficit,
+        t1_high,
+        t2_high,
+        price * h_excess,
+        price * t1_deficit,
+        price * t2_deficit,
+        occ1 * t1_deficit,
+        occ2 * t2_deficit,
         vent_counter,
         low1,
         low2,
@@ -191,12 +204,6 @@ def select_action(state):
     The feature vector contains positive-part features for humidity excess,
     temperature deficits, and high-temperature excess.
     """
-#    print("\nADP DEBUG - raw simulator state:")
-#    print("type:", type(state))
-#    print("keys:", list(state.keys()) if hasattr(state, "keys") else "no keys() method")
-#    print("state:", state)
-
-
     Pmax = DATA["Pmax"]
     Pvent = DATA["Pvent"]
     Tlow = DATA["Tlow"]
@@ -453,15 +460,18 @@ def select_action(state):
                 + theta_next[4] * occ2_next
                 + theta_next[5] * m.H_next[k]
                 + theta_next[6] * m.h_excess[k]
-                + theta_next[7] * m.T1_next[k]
-                + theta_next[8] * m.T2_next[k]
-                + theta_next[9] * m.t1_deficit[k]
-                + theta_next[10] * m.t2_deficit[k]
-                + theta_next[11] * m.t1_high_excess[k]
-                + theta_next[12] * m.t2_high_excess[k]
-                + theta_next[13] * vent_counter_next_expr
-                + theta_next[14] * m.low1_next[k]
-                + theta_next[15] * m.low2_next[k]
+                + theta_next[7] * m.t1_deficit[k]
+                + theta_next[8] * m.t2_deficit[k]
+                + theta_next[9] * m.t1_high_excess[k]
+                + theta_next[10] * m.t2_high_excess[k]
+                + theta_next[11] * price_next * m.h_excess[k]
+                + theta_next[12] * price_next * m.t1_deficit[k]
+                + theta_next[13] * price_next * m.t2_deficit[k]
+                + theta_next[14] * occ1_next * m.t1_deficit[k]
+                + theta_next[15] * occ2_next * m.t2_deficit[k]
+                + theta_next[16] * vent_counter_next_expr
+                + theta_next[17] * m.low1_next[k]
+                + theta_next[18] * m.low2_next[k]
             )
 
         m.obj = pyo.Objective(expr=immediate_cost + future_value, sense=pyo.minimize)
@@ -515,9 +525,9 @@ def select_action(state):
 # Offline training configuration
 # =========================================================
 TRAINING_RNG_SEED = 27
-N_STATE_SAMPLES = 120       # sampled states per stage
-N_TRAIN_NEXT_SAMPLES = 8    # uncertainty samples per Bellman target
-RIDGE = 0.0  # ordinary least squares in the base version
+N_STATE_SAMPLES = 180       # sampled states per stage for Bellman fitting
+N_TRAIN_NEXT_SAMPLES = 12    # uncertainty samples per Bellman target
+RIDGE = 1.0  # ridge regularization to stabilize correlated ADP features
 TRAINING_BIG_M = 100.0
 TRAINING_SOLVER_TIME_LIMIT = 2
 
@@ -533,7 +543,19 @@ USE_EMPIRICAL_DATA_SAMPLING = True
 # policy actually visits.
 USE_FORWARD_PASS_SAMPLING = True
 FORWARD_PASS_SHARE = 0.7
-N_FORWARD_TRAJECTORIES = 200
+N_FORWARD_TRAJECTORIES = 120
+
+# Lecture-aligned training extensions.
+USE_OIH_WARM_START = True
+OIH_STATE_SAMPLES = 25
+OIH_TRAJECTORIES_PER_STATE = 3
+OIH_SOLVER_TIME_LIMIT = 2
+
+N_ADP_ITERATIONS = 10
+ADP_FORWARD_TRAJECTORIES = 80
+ETA_UPDATE_ALPHA = 0.30
+CLIP_NEGATIVE_TARGETS = True
+
 
 # No target clipping is used in the base version. Bellman targets are fitted
 # directly by linear regression, consistent with the sampling-based approximate
@@ -1121,15 +1143,13 @@ def solve_one_step_training_target(state, theta_next):
             + theta_next[4] * occ2_next
             + theta_next[5] * m.H_next[k]
             + theta_next[6] * m.h_excess[k]
-            + theta_next[7] * m.T1_next[k]
-            + theta_next[8] * m.T2_next[k]
-            + theta_next[9] * m.t1_deficit[k]
-            + theta_next[10] * m.t2_deficit[k]
-            + theta_next[11] * m.t1_high_excess[k]
-            + theta_next[12] * m.t2_high_excess[k]
-            + theta_next[13] * vent_counter_next_expr
-            + theta_next[14] * m.low1_next[k]
-            + theta_next[15] * m.low2_next[k]
+            + theta_next[7] * m.t1_deficit[k]
+            + theta_next[8] * m.t2_deficit[k]
+            + theta_next[9] * m.t1_high_excess[k]
+            + theta_next[10] * m.t2_high_excess[k]
+            + theta_next[11] * vent_counter_next_expr
+            + theta_next[12] * m.low1_next[k]
+            + theta_next[13] * m.low2_next[k]
         )
 
     m.obj = pyo.Objective(expr=immediate_cost + future_value, sense=pyo.minimize)
@@ -1160,6 +1180,329 @@ def solve_one_step_training_target(state, theta_next):
     return float(value)
 
 
+
+# =========================================================
+# OiH warm-start and forward-backward ADP training helpers
+# =========================================================
+def sample_future_trajectory_from_state(state, rng):
+    """Sample one complete exogenous trajectory from the current state to end of day."""
+    t0 = int(state["current_time"])
+    horizon = DATA["T_HORIZON"] - t0
+
+    price = float(state["price_t"])
+    price_prev = float(state["price_previous"])
+    occ1 = float(state["Occ1"])
+    occ2 = float(state["Occ2"])
+
+    trajectory = []
+    for h in range(horizon):
+        t_abs = t0 + h
+        trajectory.append({
+            "price": float(price),
+            "occ1": float(occ1),
+            "occ2": float(occ2),
+            "tout": float(DATA["Tout"][t_abs % DATA["T_HORIZON"]]),
+        })
+        if h < horizon - 1:
+            next_price = PriceProcessRestaurant.price_model(price, price_prev)
+            next_occ1, next_occ2 = OccupancyProcessRestaurant.next_occupancy_levels(occ1, occ2)
+            price_prev = price
+            price = float(next_price)
+            occ1 = float(next_occ1)
+            occ2 = float(next_occ2)
+
+    return trajectory
+
+
+def solve_oih_trajectory_cost(state, trajectory):
+    """
+    Deterministic optimal-in-hindsight cost from a sampled state and future trajectory.
+
+    This is used only offline to create warm-start targets. It is not used by
+    select_action() and therefore does not turn the submitted policy into SP.
+    """
+    Pmax = DATA["Pmax"]
+    Pvent = DATA["Pvent"]
+    Uvent = DATA["Uvent"]
+    Tlow = DATA["Tlow"]
+    TOK = DATA["TOK"]
+    THigh = DATA["THigh"]
+    HHigh = DATA["HHigh"]
+    z_exch = DATA["z_exch"]
+    z_loss = DATA["z_loss"]
+    z_conv = DATA["z_conv"]
+    z_cool = DATA["z_cool"]
+    z_occ = DATA["z_occ"]
+    eta_occ = DATA["eta_occ"]
+    eta_vent = DATA["eta_vent"]
+
+    h = len(trajectory)
+    if h <= 0:
+        return 0.0
+
+    BIG_M = TRAINING_BIG_M
+
+    T1_0 = float(state["T1"])
+    T2_0 = float(state["T2"])
+    H_0 = float(state["H"])
+    low1_0 = int(state["low_override_r1"])
+    low2_0 = int(state["low_override_r2"])
+    vent_counter_0 = int(state["vent_counter"])
+
+    if T1_0 < Tlow:
+        low1_0 = 1
+    if T2_0 < Tlow:
+        low2_0 = 1
+
+    m = pyo.ConcreteModel()
+    m.S = pyo.RangeSet(0, h)       # state nodes
+    m.D = pyo.RangeSet(0, h - 1)   # decision stages
+    m.R = pyo.Set(initialize=[1, 2])
+
+    m.Temp = pyo.Var(m.S, m.R)
+    m.Hum = pyo.Var(m.S)
+
+    m.pc = pyo.Var(m.D, m.R, bounds=(0.0, Pmax))
+    m.vb = pyo.Var(m.D, domain=pyo.Binary)
+    m.pf = pyo.Var(m.D, m.R, bounds=(0.0, Pmax))
+    m.ve = pyo.Var(m.D, domain=pyo.Binary)
+
+    m.y_low = pyo.Var(m.S, m.R, domain=pyo.Binary)
+    m.y_ok = pyo.Var(m.S, m.R, domain=pyo.Binary)
+    m.y_high = pyo.Var(m.S, m.R, domain=pyo.Binary)
+    m.z_below_low = pyo.Var(m.S, m.R, domain=pyo.Binary)
+    m.start_vent = pyo.Var(m.D, domain=pyo.Binary)
+
+    m.cons = pyo.ConstraintList()
+
+    m.cons.add(m.Temp[0, 1] == T1_0)
+    m.cons.add(m.Temp[0, 2] == T2_0)
+    m.cons.add(m.Hum[0] == H_0)
+    m.cons.add(m.y_low[0, 1] == low1_0)
+    m.cons.add(m.y_low[0, 2] == low2_0)
+
+    # Threshold detection for all state nodes.
+    for s in range(h + 1):
+        for r in [1, 2]:
+            m.cons.add(m.Temp[s, r] >= THigh - BIG_M * (1 - m.y_high[s, r]))
+            m.cons.add(m.Temp[s, r] <= THigh + BIG_M * m.y_high[s, r])
+
+            m.cons.add(m.Temp[s, r] >= TOK - BIG_M * (1 - m.y_ok[s, r]))
+            m.cons.add(m.Temp[s, r] <= TOK + BIG_M * m.y_ok[s, r])
+
+            m.cons.add(m.Temp[s, r] <= Tlow + BIG_M * (1 - m.z_below_low[s, r]))
+            m.cons.add(m.Temp[s, r] >= Tlow - BIG_M * m.z_below_low[s, r])
+
+    # Low-temperature hysteresis update.
+    for s in range(1, h + 1):
+        for r in [1, 2]:
+            m.cons.add(m.y_low[s, r] >= m.z_below_low[s, r])
+            m.cons.add(m.y_low[s, r] >= m.y_low[s - 1, r] - m.y_ok[s, r])
+            m.cons.add(m.y_low[s, r] <= m.z_below_low[s, r] + m.y_low[s - 1, r])
+            m.cons.add(m.y_low[s, r] <= m.z_below_low[s, r] + (1 - m.y_ok[s, r]))
+
+    # Effective heating and ventilation logic.
+    for d in range(h):
+        for r in [1, 2]:
+            m.cons.add(m.pf[d, r] <= Pmax * (1 - m.y_high[d, r]))
+            m.cons.add(m.pf[d, r] >= Pmax * (m.y_low[d, r] - m.y_high[d, r]))
+            m.cons.add(m.pf[d, r] <= m.pc[d, r] + Pmax * (m.y_low[d, r] + m.y_high[d, r]))
+            m.cons.add(m.pf[d, r] >= m.pc[d, r] - Pmax * (m.y_low[d, r] + m.y_high[d, r]))
+
+        # Humidity overrule and commanded ventilation.
+        m.cons.add(m.Hum[d] <= HHigh + BIG_M * m.ve[d])
+        m.cons.add(m.ve[d] >= m.vb[d])
+
+        # Ventilation startup detection.
+        if d == 0:
+            prev_on = 1 if vent_counter_0 > 0 else 0
+            m.cons.add(m.start_vent[d] >= m.ve[d] - prev_on)
+            m.cons.add(m.start_vent[d] <= m.ve[d])
+            m.cons.add(m.start_vent[d] <= 1 - prev_on)
+        else:
+            m.cons.add(m.start_vent[d] >= m.ve[d] - m.ve[d - 1])
+            m.cons.add(m.start_vent[d] <= m.ve[d])
+            m.cons.add(m.start_vent[d] <= 1 - m.ve[d - 1])
+
+    # Existing ventilation inertia from the observed state.
+    if vent_counter_0 == 1:
+        m.cons.add(m.ve[0] == 1)
+        if h >= 2:
+            m.cons.add(m.ve[1] == 1)
+    elif vent_counter_0 == 2:
+        m.cons.add(m.ve[0] == 1)
+
+    # Minimum up-time if ventilation starts inside the trajectory.
+    for d in range(h):
+        for dd in range(d + 1, min(h, d + Uvent)):
+            m.cons.add(m.ve[dd] >= m.start_vent[d])
+
+    # Physical dynamics.
+    for d in range(h):
+        occ1 = float(trajectory[d]["occ1"])
+        occ2 = float(trajectory[d]["occ2"])
+        tout = float(trajectory[d]["tout"])
+
+        m.cons.add(
+            m.Temp[d + 1, 1]
+            == m.Temp[d, 1]
+            + z_exch * (m.Temp[d, 2] - m.Temp[d, 1])
+            + z_loss * (tout - m.Temp[d, 1])
+            + z_conv * m.pf[d, 1]
+            - z_cool * m.ve[d]
+            + z_occ * occ1
+        )
+        m.cons.add(
+            m.Temp[d + 1, 2]
+            == m.Temp[d, 2]
+            + z_exch * (m.Temp[d, 1] - m.Temp[d, 2])
+            + z_loss * (tout - m.Temp[d, 2])
+            + z_conv * m.pf[d, 2]
+            - z_cool * m.ve[d]
+            + z_occ * occ2
+        )
+        m.cons.add(m.Hum[d + 1] == m.Hum[d] + eta_occ * (occ1 + occ2) - eta_vent * m.ve[d])
+
+    m.obj = pyo.Objective(
+        expr=sum(
+            float(trajectory[d]["price"]) * (m.pf[d, 1] + m.pf[d, 2] + Pvent * m.ve[d])
+            for d in range(h)
+        ),
+        sense=pyo.minimize,
+    )
+
+    solver = pyo.SolverFactory("gurobi")
+    solver.options["OutputFlag"] = 0
+    solver.options["TimeLimit"] = OIH_SOLVER_TIME_LIMIT
+    results = solver.solve(m, tee=False)
+
+    ok = (
+        results.solver.status == pyo.SolverStatus.ok
+        and results.solver.termination_condition in [
+            pyo.TerminationCondition.optimal,
+            pyo.TerminationCondition.feasible,
+            pyo.TerminationCondition.maxTimeLimit,
+        ]
+    )
+    if not ok:
+        raise RuntimeError("OiH deterministic solve failed")
+
+    value = pyo.value(m.obj)
+    if value is None or not np.isfinite(value):
+        raise RuntimeError("OiH deterministic solve returned invalid value")
+    return float(max(0.0, value))
+
+
+def oih_warm_start_theta(rng):
+    """Fit initial eta_t values from optimal-in-hindsight trajectory costs."""
+    theta = {DATA["T_HORIZON"]: np.zeros(N_FEATURES)}
+    summary = {}
+
+    print("\nOiH warm-start:")
+    for t in reversed(range(DATA["T_HORIZON"])):
+        states_t = [sample_training_state(t, rng) for _ in range(OIH_STATE_SAMPLES)]
+        targets_t = []
+        failed = 0
+
+        for s in states_t:
+            values = []
+            for _ in range(OIH_TRAJECTORIES_PER_STATE):
+                try:
+                    traj = sample_future_trajectory_from_state(s, rng)
+                    values.append(solve_oih_trajectory_cost(s, traj))
+                except Exception:
+                    failed += 1
+
+            if values:
+                target = float(np.mean(values))
+            else:
+                target = 1000.0
+            if CLIP_NEGATIVE_TARGETS:
+                target = max(0.0, target)
+            targets_t.append(target)
+
+        theta[t] = fit_theta(states_t, targets_t)
+        summary[("oih", t)] = {
+            "mean_target": float(np.mean(targets_t)),
+            "std_target": float(np.std(targets_t)),
+            "min_target": float(np.min(targets_t)),
+            "max_target": float(np.max(targets_t)),
+            "failed_targets": int(failed),
+        }
+        print(
+            f"OiH theta[{t}] | "
+            f"mean={summary[('oih', t)]['mean_target']:.2f}, "
+            f"std={summary[('oih', t)]['std_target']:.2f}, "
+            f"min={summary[('oih', t)]['min_target']:.2f}, "
+            f"max={summary[('oih', t)]['max_target']:.2f}, "
+            f"failed={summary[('oih', t)]['failed_targets']}"
+        )
+
+    return theta, summary
+
+
+def generate_policy_forward_pass_states(theta, n_trajectories, rng):
+    """Forward pass using the current ADP policy implied by theta."""
+    states_by_t = {t: [] for t in range(DATA["T_HORIZON"])}
+
+    if EMPIRICAL_DATA is None:
+        return generate_forward_pass_states(n_trajectories, rng)
+
+    global ADP_THETA
+    old_theta = ADP_THETA
+    ADP_THETA = {int(k): [float(x) for x in v] for k, v in theta.items()}
+
+    try:
+        price_data = EMPIRICAL_DATA["price"]
+        n_days = price_data.shape[0]
+
+        for _ in range(n_trajectories):
+            day_idx = int(rng.integers(0, n_days))
+            T1 = 21.0
+            T2 = 21.0
+            H = 40.0
+            vent_counter = 0
+            low1 = 0
+            low2 = 0
+
+            for t in range(DATA["T_HORIZON"]):
+                exo = empirical_exogenous_state(t, rng, day_idx=day_idx)
+                if exo is None:
+                    break
+                price_t, price_prev, occ1, occ2, _ = exo
+                state = {
+                    "current_time": int(t),
+                    "T1": float(T1),
+                    "T2": float(T2),
+                    "H": float(H),
+                    "price_t": float(price_t),
+                    "price_previous": float(price_prev),
+                    "Occ1": float(occ1),
+                    "Occ2": float(occ2),
+                    "vent_counter": int(vent_counter),
+                    "low_override_r1": int(low1),
+                    "low_override_r2": int(low2),
+                }
+                states_by_t[t].append(dict(state))
+
+                try:
+                    a = select_action(state)
+                    action = (
+                        float(a["HeatPowerRoom1"]),
+                        float(a["HeatPowerRoom2"]),
+                        int(a["VentilationON"]),
+                    )
+                except Exception:
+                    action = greedy_rollout_action(state)
+
+                T1, T2, H, vent_counter, low1, low2 = simulate_one_step_state(state, action, t)
+
+    finally:
+        ADP_THETA = old_theta
+
+    return states_by_t
+
+
 def fit_theta(states, targets):
     """
     Linear regression fit:
@@ -1173,7 +1516,9 @@ def fit_theta(states, targets):
     y = np.array(targets, dtype=float)
 
     if RIDGE > 0.0:
-        A = Phi.T @ Phi + RIDGE * np.eye(Phi.shape[1])
+        reg = RIDGE * np.eye(Phi.shape[1])
+        reg[0, 0] = 0.0  # do not regularize the intercept
+        A = Phi.T @ Phi + reg
         b = Phi.T @ y
         return np.linalg.solve(A, b)
 
@@ -1183,65 +1528,79 @@ def fit_theta(states, targets):
 
 def train_adp():
     """
-    Sampling-based approximate backward induction.
+    Advanced pure ADP training recipe:
 
-    Terminal condition:
-        V_hat_T(s_T) = 0
+    1. Optional OiH warm-start for physically meaningful initial targets.
+    2. Repeated forward-backward fitted value improvement.
+    3. Ridge regularization, target clipping, and gradual eta updates.
 
-    Then for t = T-1, ..., 0:
-        sample states
-        compute Bellman targets using theta_{t+1}
-        fit theta_t by linear regression
+    The submitted online policy remains a one-step ADP Bellman policy.
     """
     rng = np.random.default_rng(TRAINING_RNG_SEED)
-
-    theta = {DATA["T_HORIZON"]: np.zeros(N_FEATURES)}
     summary = {}
 
-    rollout_states_by_t = None
-    if USE_FORWARD_PASS_SAMPLING:
-        rollout_states_by_t = generate_forward_pass_states(N_FORWARD_TRAJECTORIES, rng)
+    if USE_OIH_WARM_START:
+        theta, oih_summary = oih_warm_start_theta(rng)
+        summary.update(oih_summary)
+    else:
+        theta = {t: np.zeros(N_FEATURES) for t in range(DATA["T_HORIZON"] + 1)}
 
-    for t in reversed(range(DATA["T_HORIZON"])):
-        states_t = choose_training_states(t, rng, rollout_states_by_t)
-        targets_t = []
+    theta[DATA["T_HORIZON"]] = np.zeros(N_FEATURES)
 
-        theta_next = theta[t + 1]
+    for iteration in range(1, N_ADP_ITERATIONS + 1):
+        print(f"\nForward-backward ADP iteration {iteration}/{N_ADP_ITERATIONS}:")
 
-        failed_targets = 0
+        if USE_FORWARD_PASS_SAMPLING:
+            rollout_states_by_t = generate_policy_forward_pass_states(
+                theta, ADP_FORWARD_TRAJECTORIES, rng
+            )
+        else:
+            rollout_states_by_t = None
 
-        for s in states_t:
-            try:
-                # Bellman target used directly, without clipping.
-                target = float(solve_one_step_training_target(s, theta_next))
+        theta_fit = {DATA["T_HORIZON"]: np.zeros(N_FEATURES)}
 
-            except Exception:
-                # Conservative finite fallback target for rare numerical failures.
-                # In normal training this should remain zero, as indicated by
-                # failed_targets in the printed summary.
-                target = 1000.0
-                failed_targets += 1
+        for t in reversed(range(DATA["T_HORIZON"])):
+            states_t = choose_training_states(t, rng, rollout_states_by_t)
+            targets_t = []
+            failed_targets = 0
 
-            targets_t.append(target)
+            # Fitted-value / approximate-policy-iteration style target:
+            # evaluate one-step decisions against the previous theta estimate.
+            theta_next = theta[t + 1]
 
-        theta[t] = fit_theta(states_t, targets_t)
+            for s in states_t:
+                try:
+                    target = float(solve_one_step_training_target(s, theta_next))
+                    if CLIP_NEGATIVE_TARGETS:
+                        target = max(0.0, target)
+                except Exception:
+                    target = 1000.0
+                    failed_targets += 1
 
-        summary[t] = {
-            "mean_target": float(np.mean(targets_t)),
-            "std_target": float(np.std(targets_t)),
-            "min_target": float(np.min(targets_t)),
-            "max_target": float(np.max(targets_t)),
-            "failed_targets": int(failed_targets),
-        }
+                targets_t.append(target)
 
-        print(
-            f"Fitted theta[{t}] | "
-            f"mean={summary[t]['mean_target']:.2f}, "
-            f"std={summary[t]['std_target']:.2f}, "
-            f"min={summary[t]['min_target']:.2f}, "
-            f"max={summary[t]['max_target']:.2f}, "
-            f"failed={summary[t]['failed_targets']}"
-        )
+            theta_fit[t] = fit_theta(states_t, targets_t)
+
+            # Gradual update of eta, as recommended in the ADP lecture variants.
+            theta[t] = (1.0 - ETA_UPDATE_ALPHA) * theta[t] + ETA_UPDATE_ALPHA * theta_fit[t]
+
+            key = (iteration, t)
+            summary[key] = {
+                "mean_target": float(np.mean(targets_t)),
+                "std_target": float(np.std(targets_t)),
+                "min_target": float(np.min(targets_t)),
+                "max_target": float(np.max(targets_t)),
+                "failed_targets": int(failed_targets),
+            }
+
+            print(
+                f"Iter {iteration} theta[{t}] | "
+                f"mean={summary[key]['mean_target']:.2f}, "
+                f"std={summary[key]['std_target']:.2f}, "
+                f"min={summary[key]['min_target']:.2f}, "
+                f"max={summary[key]['max_target']:.2f}, "
+                f"failed={summary[key]['failed_targets']}"
+            )
 
     return theta, summary
 
@@ -1270,7 +1629,7 @@ def update_adp_theta_in_file(theta, file_path=None):
     Replace the ADP_THETA block in this file.
 
     This is only used when running:
-        python ADP_policy_27_empirical_forward_clean.py --train-and-update
+        python ADP_policy_27_advanced.py --train-and-update
 
     The submitted policy only needs select_action(state), so this update logic
     does not affect the teacher's evaluator.
@@ -1285,7 +1644,7 @@ def update_adp_theta_in_file(theta, file_path=None):
 
     pattern = (
         r"# --- ADP_THETA_START ---\n"
-        r"ADP_THETA = \{.*?\}\n"
+        r".*?"
         r"# --- ADP_THETA_END ---"
     )
 
@@ -1299,8 +1658,7 @@ def update_adp_theta_in_file(theta, file_path=None):
 
     if n_replacements != 1:
         raise RuntimeError(
-            "Could not uniquely locate ADP_THETA block. "
-            "Check that the ADP_THETA_START and ADP_THETA_END markers are present."
+            f"Could not uniquely locate ADP_THETA marker block. Found {n_replacements} matches."
         )
 
     file_path.write_text(updated, encoding="utf-8")
@@ -1384,8 +1742,8 @@ def run_post_training_checks():
     Convenience wrapper after --train-and-update.
 
     Run this using:
-        python ADP_policy_27_empirical_forward_clean.py --check-values
-        python ADP_policy_27_empirical_forward_clean.py --smoke-test
+        python ADP_policy_27_advanced.py --check-values
+        python ADP_policy_27_advanced.py --smoke-test
     """
     debug_value_predictions()
     smoke_test_select_action()
@@ -1408,12 +1766,12 @@ if __name__ == "__main__":
             update_adp_theta_in_file(theta)
             print(
                 "\nNext recommended checks:\n"
-                "    python ADP_policy_27_empirical_forward_clean.py --check-values\n"
-                "    python ADP_policy_27_empirical_forward_clean.py --smoke-test\n"
+                "    python ADP_policy_27_advanced.py --check-values\n"
+                "    python ADP_policy_27_advanced.py --smoke-test\n"
             )
         else:
             print_theta_for_copy(theta)
             print(
                 "\nTo update this file automatically, run:\n"
-                "    python ADP_policy_27_empirical_forward_clean.py --train-and-update\n"
+                "    python ADP_policy_27_advanced.py --train-and-update\n"
             )

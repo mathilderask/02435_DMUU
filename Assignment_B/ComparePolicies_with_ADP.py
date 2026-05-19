@@ -25,8 +25,7 @@ import DummyPolicy
 import Hybrid_policy_27
 import OptimalInHindsight
 import SP_policy_27
-import ADP_policy_27_random_clean
-import ADP_policy_27_advanced_fixed
+import ADP_policy_27
 from SimulationEnvironment import RestaurantSimulationEnvironment
 
 
@@ -103,8 +102,7 @@ def _policy_factories(price: np.ndarray, occ1: np.ndarray, occ2: np.ndarray) -> 
         "Dummy": DummyPolicy,
         "Optimal in Hindsight": _OptimalInHindsightReplayPolicy(params),
         "SP": SP_policy_27,
-        "ADP random": ADP_policy_27_random_clean,
-        "ADP": ADP_policy_27_advanced_fixed,
+        "ADP": ADP_policy_27,
         "Expected value": _ExpectedValueReplayPolicy(params, price, occ1, occ2),
         "Base": BasePolicy,
         "Hybrid": Hybrid_policy_27,

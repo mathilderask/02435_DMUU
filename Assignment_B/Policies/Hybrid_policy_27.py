@@ -599,9 +599,9 @@ def select_action(state):
     if ("optimal" not in term_cond) and ("feasible" not in term_cond):
         raise RuntimeError(f"Solver did not return usable solution: {term_cond}")
 
-    print("Hybrid objective value:", pyo.value(m.obj))
-    print("Energy cost part:", pyo.value(energy_cost))
-    print("Terminal value part:", pyo.value(terminal_value))
+    # print("Hybrid objective value:", pyo.value(m.obj))
+    # print("Energy cost part:", pyo.value(energy_cost))
+    # print("Terminal value part:", pyo.value(terminal_value))
 
     # ----------------------------------------------
     # Extract here-and-now action from root node

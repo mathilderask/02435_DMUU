@@ -701,7 +701,7 @@ def train_theta_forward_backward(
     for it in range(1, n_iterations + 1):
         use_dummy_policy = (it == 1)
 
-        print(f"\nForward-backward iteration {it}/{n_iterations} | forward policy: {'DummyPolicy' if use_dummy_policy else 'continuous ADP'}")
+        print(f"\nForward-backward iteration {it}/{n_iterations} | forward policy: {'Dummy_policy_27' if use_dummy_policy else 'continuous ADP'}")
 
         forward_states = generate_forward_pass_states(
             theta,

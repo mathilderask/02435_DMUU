@@ -551,16 +551,11 @@ def select_action(state):
     # Objective: expected energy cost over nodes
     # plus small leaf penalty to reduce myopia
     # -----------------------------------------------------
-    decision_nodes = [n for n in all_nodes if len(children[n]) > 0]
-
-    # Charge operating costs only at non-leaf nodes, i.e. nodes whose actions
-    # are followed by a modeled state transition. Leaf nodes represent the terminal
-    # predicted state of the lookahead horizon; their actions would not affect any
-    # future temperature or humidity state inside this model. Therefore, leaf nodes
-    # are used only in the terminal penalty.
     energy_cost = sum(
-        m.rho[n] * m.lam[n] * (Pvent * m.v[n] + m.p[n, 1] + m.p[n, 2])
-        for n in decision_nodes
+        m.rho[n] * m.lam[n] * (
+            Pvent * m.v[n] + m.p[n, 1] + m.p[n, 2]
+        )
+        for n in all_nodes
     )
 
     m.obj = pyo.Objective(expr=energy_cost, sense=pyo.minimize)
@@ -594,7 +589,7 @@ def select_action(state):
     p2 = pyo.value(m.p[root, 2])
 
     # Return the commanded ventilation decision.
-    # The optimization also models the effective ventilation v[root], which may be
+    # The optimization also models the effective ventilation ve[root], which may be
     # forced ON by humidity overrule or ventilation inertia and is used for cost and
     # dynamics inside the lookahead model. The submitted action corresponds to the
     # controllable command; the environment/controller logic can then enforce any

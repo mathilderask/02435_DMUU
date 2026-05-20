@@ -7,6 +7,7 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 import Policies.SP_policy_27 as SP_policy
 import Policies.Hybrid_policy_27 as hybrid_policy
+import Policies.TwoStageSP_policy_27 as TwoStageSP_policy 
 
 from v2_Checks import check_and_sanitize_action
 
@@ -28,6 +29,7 @@ PowerMax = {1: 3.0, 2: 3.0}
 
 action_SP = check_and_sanitize_action(SP_policy, state, PowerMax)
 action_hybrid = check_and_sanitize_action(hybrid_policy, state, PowerMax)
+action_two_stage = check_and_sanitize_action(TwoStageSP_policy, state, PowerMax)
 
 print(" ")
 print("Sanitized action SP:")
@@ -36,3 +38,7 @@ print(action_SP)
 print(" ")
 print("Sanitized action Hybrid:")
 print(action_hybrid)
+
+print(" ")
+print("Sanitized action Two-Stage:")
+print(action_two_stage)

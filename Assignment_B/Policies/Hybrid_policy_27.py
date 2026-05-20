@@ -3,6 +3,10 @@
 import numpy as np
 import pyomo.environ as pyo
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import Data.v2_SystemCharacteristics as SystemCharacteristics
 import Data.PriceProcessRestaurant
 import Data.OccupancyProcessRestaurant
@@ -49,11 +53,11 @@ def select_action(state):
     MIP_GAP = 0.03
 
     # Hybrid / ADP-style terminal value parameters
-    T_REF = TOK
-    H_SAFE = HHigh - 2.0
-    GAMMA_T_LOW = 8.0
-    GAMMA_T_HIGH = 1.0
-    GAMMA_H = 3.0
+    T_REF = TOK + 0.3
+    H_SAFE = HHigh
+    GAMMA_T_LOW = 3.0
+    GAMMA_T_HIGH = 0.2
+    GAMMA_H = 0.5
 
     # =========================================================
     # Helpers
@@ -565,7 +569,7 @@ def select_action(state):
 
     for n in leaf_nodes:
         for r in [1, 2]:
-            m.terminal_value_constraints.add(m.term_low_T[n, r] >= T_REF - m.Temp[n, r])
+            m.terminal_value_constraints.add(m.term_low_T[n, r] >= Tlow - m.Temp[n, r])
             m.terminal_value_constraints.add(m.term_high_T[n, r] >= m.Temp[n, r] - THigh)
 
         m.terminal_value_constraints.add(m.term_high_H[n] >= m.Hum[n] - H_SAFE)
@@ -603,7 +607,7 @@ def select_action(state):
     # print("Energy cost part:", pyo.value(energy_cost))
     # print("Terminal value part:", pyo.value(terminal_value))
 
-    # ----------------------------------------------
+    # -----------------------------------------------------
     # Extract here-and-now action from root node
     # -----------------------------------------------------
     p1 = pyo.value(m.pf[root, 1])

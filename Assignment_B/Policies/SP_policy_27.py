@@ -8,7 +8,7 @@ import Data.PriceProcessRestaurant
 import Data.OccupancyProcessRestaurant
 
 
-def select_action(state, lookahead: int = 4):
+def select_action(state):
 
     # =========================================================
     # Fixed problem data
@@ -41,9 +41,7 @@ def select_action(state, lookahead: int = 4):
     # =========================================================
     # Policy tuning parameters
     # =========================================================
-    LOOKAHEAD = int(lookahead)  # total number of stages including current stage
-    if LOOKAHEAD < 2:
-        raise ValueError("lookahead must be at least 2")
+    LOOKAHEAD = 5
     INITIAL_SAMPLES = 30       # raw samples per node before reduction
     REDUCED_BRANCHES = 3      # reduced children per non-leaf node
     BIG_M = 100.0

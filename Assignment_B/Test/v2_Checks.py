@@ -1,4 +1,3 @@
-<<<<<<<< HEAD:Assignment_B/Data/v2_Checks.py
 # -*- coding: utf-8 -*-
 """
 Created on Thu Nov 20 11:08:56 2025
@@ -94,7 +93,6 @@ PowerMax = {1: 3.0, 2: 3.0}
 
 action = check_and_sanitize_action(policy, state, PowerMax)
 print(action)
-========
 # -*- coding: utf-8 -*-
 """
 Created on Thu Nov 20 11:08:56 2025
@@ -191,4 +189,3 @@ if __name__ == "__main__":
 
     action = check_and_sanitize_action(policy, state, PowerMax)
     print(action)
->>>>>>>> origin/main:Assignment_B/Test/v2_Checks.py

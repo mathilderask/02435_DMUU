@@ -225,9 +225,11 @@ def select_action(state: Dict[str, Any]) -> Dict[str, Any]:
     best_cost = float("inf")
 
     candidates = candidate_current_actions(base_action, state, params)
+    evaluated_candidates = 0
 
     for action in candidates:
         rollout_cost = rollout_cost_after_current_action(state, action, params)
+        evaluated_candidates += 1
 
         if rollout_cost < best_cost:
             best_cost = rollout_cost
@@ -242,14 +244,15 @@ def select_action(state: Dict[str, Any]) -> Dict[str, Any]:
     if PRINT_RUNTIME:
         elapsed = time.perf_counter() - start_time
         _RUNTIME_LOG.append(elapsed)
-        # print(
-        #     f"Hybrid rollout policy call | t={t:02d} | "
-        #     f"runtime={elapsed:.2f}s | "
-        #     f"scenarios={N_ROLLOUT_SCENARIOS} | "
-        #     f"candidates={evaluated_candidates}/{len(candidates)} | "
-        #     f"action=({result['HeatPowerRoom1']:.2f}, "
-        #     f"{result['HeatPowerRoom2']:.2f}, {result['VentilationON']})",
-        #     flush=True,
-        # )
+        t = int(round(safe_float(state.get("current_time", -1), -1)))
+        print(
+            f"Hybrid rollout policy call | t={t:02d} | "
+            f"runtime={elapsed:.2f}s | "
+            f"scenarios={N_ROLLOUT_SCENARIOS} | "
+            f"candidates={evaluated_candidates}/{len(candidates)} | "
+            f"action=({result['HeatPowerRoom1']:.2f}, "
+            f"{result['HeatPowerRoom2']:.2f}, {result['VentilationON']})",
+            flush=True,
+        )
 
     return result

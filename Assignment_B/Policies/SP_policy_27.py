@@ -1,5 +1,4 @@
 
-
 import numpy as np
 import pyomo.environ as pyo
 
@@ -68,7 +67,7 @@ def select_action(state):
             return float(x)
         except Exception:
             return float(default)
-        
+
 
     def weighted_distance(a, b) -> float:
         """
@@ -87,11 +86,11 @@ def select_action(state):
         occ2_range = 20.0  # 10 to 30
 
         return (
-            ((a[0] - b[0]) / price_range) ** 2
-            + ((a[1] - b[1]) / occ1_range) ** 2
-            + ((a[2] - b[2]) / occ2_range) ** 2
+                ((a[0] - b[0]) / price_range) ** 2
+                + ((a[1] - b[1]) / occ1_range) ** 2
+                + ((a[2] - b[2]) / occ2_range) ** 2
         )
-    
+
 
     def reduce_samples_kmeans(samples, k, n_iter=8) -> tuple[list[tuple[float, float, float]], list[float]]:
         """
@@ -310,7 +309,7 @@ def select_action(state):
     # Build stochastic MILP on tree nodes
     # Node-based decisions => non-anticipativity by construction
     # =========================================================
-    
+
     m = pyo.ConcreteModel()
 
     m.N = pyo.Set(initialize=all_nodes)
@@ -319,14 +318,14 @@ def select_action(state):
     m.NNR = pyo.Set(initialize=nonroot_nodes)
 
     # Scenario-tree node probabilities and exogenous data
-    m.q = pyo.Param(m.N, initialize={n: nodes[n]["prob"] for n in all_nodes})
-    m.price = pyo.Param(m.N, initialize={n: nodes[n]["price"] for n in all_nodes})
+    m.rho = pyo.Param(m.N, initialize={n: nodes[n]["prob"] for n in all_nodes})
+    m.lam = pyo.Param(m.N, initialize={n: nodes[n]["price"] for n in all_nodes})
     m.occ = pyo.Param(
         m.N, m.R,
         initialize={(n, 1): nodes[n]["occ1"] for n in all_nodes} |
-                    {(n, 2): nodes[n]["occ2"] for n in all_nodes}
+                   {(n, 2): nodes[n]["occ2"] for n in all_nodes}
     )
-    m.tout = pyo.Param(m.N, initialize={n: nodes[n]["tout"] for n in all_nodes})
+    m.Tout = pyo.Param(m.N, initialize={n: nodes[n]["tout"] for n in all_nodes})
     m.stage = pyo.Param(m.N, initialize={n: nodes[n]["stage"] for n in all_nodes})
 
 
@@ -334,48 +333,48 @@ def select_action(state):
     # -----------------------------------------------------
     # Decision variables at each node
     # -----------------------------------------------------
-    m.pc = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))     # commanded heater power
-    m.vb = pyo.Var(m.N, domain=pyo.Binary)           # commanded ventilation
+    m.q = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))     # commanded heater power
+    m.vc = pyo.Var(m.N, domain=pyo.Binary)           # commanded ventilation
 
     # Effective actions after overrules/inertia
-    m.pf = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))
-    m.ve = pyo.Var(m.N, domain=pyo.Binary)
+    m.p = pyo.Var(m.N, m.R, bounds=(0.0, Pmax))
+    m.v = pyo.Var(m.N, domain=pyo.Binary)
 
     # State variables
-    m.Temp = pyo.Var(m.N, m.R)
-    m.Hum = pyo.Var(m.N)
+    m.T = pyo.Var(m.N, m.R)
+    m.H = pyo.Var(m.N)
 
     # Binary logic
-    m.y_low = pyo.Var(m.N, m.R, domain=pyo.Binary)
-    m.y_ok = pyo.Var(m.N, m.R, domain=pyo.Binary)
-    m.y_high = pyo.Var(m.N, m.R, domain=pyo.Binary)
-    m.z_below_low = pyo.Var(m.N, m.R, domain=pyo.Binary)
-    m.start_vent = pyo.Var(m.N, domain=pyo.Binary)
+    m.u = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.b = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.w = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.a = pyo.Var(m.N, m.R, domain=pyo.Binary)
+    m.s = pyo.Var(m.N, domain=pyo.Binary)
 
 
 
     # -----------------------------------------------------
     # Root state fixing
     # -----------------------------------------------------
-    m.root_temp1 = pyo.Constraint(expr=m.Temp[root, 1] == T1_0)
-    m.root_temp2 = pyo.Constraint(expr=m.Temp[root, 2] == T2_0)
-    m.root_hum = pyo.Constraint(expr=m.Hum[root] == H_0)
+    m.root_T1 = pyo.Constraint(expr=m.T[root, 1] == T1_0)
+    m.root_T2 = pyo.Constraint(expr=m.T[root, 2] == T2_0)
+    m.root_H = pyo.Constraint(expr=m.H[root] == H_0)
 
-    m.root_y_low1 = pyo.Constraint(expr=m.y_low[root, 1] == low_override_r1_0)
-    m.root_y_low2 = pyo.Constraint(expr=m.y_low[root, 2] == low_override_r2_0)
+    m.root_u1 = pyo.Constraint(expr=m.u[root, 1] == low_override_r1_0)
+    m.root_u2 = pyo.Constraint(expr=m.u[root, 2] == low_override_r2_0)
 
-    # Detect root OK / High conditions from observed temperature
-    m.root_y_ok_lb = pyo.ConstraintList()
-    m.root_y_ok_ub = pyo.ConstraintList()
-    m.root_y_high_lb = pyo.ConstraintList()
-    m.root_y_high_ub = pyo.ConstraintList()
+    # Detect root OK / high-temperature conditions from observed temperature
+    m.root_b_lb = pyo.ConstraintList()
+    m.root_b_ub = pyo.ConstraintList()
+    m.root_w_lb = pyo.ConstraintList()
+    m.root_w_ub = pyo.ConstraintList()
 
     for r in [1, 2]:
-        m.root_y_ok_lb.add(m.Temp[root, r] >= TOK - BIG_M * (1 - m.y_ok[root, r]))
-        m.root_y_ok_ub.add(m.Temp[root, r] <= TOK + BIG_M * m.y_ok[root, r])
+        m.root_b_lb.add(m.T[root, r] >= TOK - BIG_M * (1 - m.b[root, r]))
+        m.root_b_ub.add(m.T[root, r] <= TOK + BIG_M * m.b[root, r])
 
-        m.root_y_high_lb.add(m.Temp[root, r] >= THigh - BIG_M * (1 - m.y_high[root, r]))
-        m.root_y_high_ub.add(m.Temp[root, r] <= THigh + BIG_M * m.y_high[root, r])
+        m.root_w_lb.add(m.T[root, r] >= THigh - BIG_M * (1 - m.w[root, r]))
+        m.root_w_ub.add(m.T[root, r] <= THigh + BIG_M * m.w[root, r])
 
 
 
@@ -386,57 +385,57 @@ def select_action(state):
 
     for n in nonroot_nodes:
         for r in [1, 2]:
-            # T >= THigh <=> y_high = 1
-            m.logic_cons.add(m.Temp[n, r] >= THigh - BIG_M * (1 - m.y_high[n, r]))
-            m.logic_cons.add(m.Temp[n, r] <= THigh + BIG_M * m.y_high[n, r])
+            # T >= THigh <=> w = 1
+            m.logic_cons.add(m.T[n, r] >= THigh - BIG_M * (1 - m.w[n, r]))
+            m.logic_cons.add(m.T[n, r] <= THigh + BIG_M * m.w[n, r])
 
-            # T >= TOK <=> y_ok = 1
-            m.logic_cons.add(m.Temp[n, r] >= TOK - BIG_M * (1 - m.y_ok[n, r]))
-            m.logic_cons.add(m.Temp[n, r] <= TOK + BIG_M * m.y_ok[n, r])
+            # T >= TOK <=> b = 1
+            m.logic_cons.add(m.T[n, r] >= TOK - BIG_M * (1 - m.b[n, r]))
+            m.logic_cons.add(m.T[n, r] <= TOK + BIG_M * m.b[n, r])
 
-            # T <= Tlow <=> z_below_low = 1
-            m.logic_cons.add(m.Temp[n, r] <= Tlow + BIG_M * (1 - m.z_below_low[n, r]))
-            m.logic_cons.add(m.Temp[n, r] >= Tlow - BIG_M * m.z_below_low[n, r])
+            # T <= Tlow <=> a = 1
+            m.logic_cons.add(m.T[n, r] <= Tlow + BIG_M * (1 - m.a[n, r]))
+            m.logic_cons.add(m.T[n, r] >= Tlow - BIG_M * m.a[n, r])
 
     # -----------------------------------------------------
     # Low-temperature hysteresis update on the tree
     #
     # At node n:
-    # y_low[n] = 1 if Temp[n] <= Tlow
-    #         or if y_low[parent(n)] = 1 and Temp[n] < TOK
+    # u[n] = 1 if T[n] <= Tlow
+    #      or if u[parent(n)] = 1 and T[n] < TOK
     #         else 0
     # -----------------------------------------------------
     for n in nonroot_nodes:
         p = parent[n]
         for r in [1, 2]:
-            m.logic_cons.add(m.y_low[n, r] >= m.z_below_low[n, r])
-            m.logic_cons.add(m.y_low[n, r] >= m.y_low[p, r] - m.y_ok[n, r])
-            m.logic_cons.add(m.y_low[n, r] <= m.z_below_low[n, r] + m.y_low[p, r])
-            m.logic_cons.add(m.y_low[n, r] <= m.z_below_low[n, r] + (1 - m.y_ok[n, r]))
+            m.logic_cons.add(m.u[n, r] >= m.a[n, r])
+            m.logic_cons.add(m.u[n, r] >= m.u[p, r] - m.b[n, r])
+            m.logic_cons.add(m.u[n, r] <= m.a[n, r] + m.u[p, r])
+            m.logic_cons.add(m.u[n, r] <= m.a[n, r] + (1 - m.b[n, r]))
 
     # -----------------------------------------------------
     # Effective heating action
     #
     # High-temp priority:
-    # if y_high = 1 => pf = 0
-    # elif y_low = 1 => pf = Pmax
-    # else pf = pc
+    # if w = 1 => p = 0
+    # elif u = 1 => p = Pmax
+    # else p = q
     # -----------------------------------------------------
     m.heat_logic = pyo.ConstraintList()
     for n in all_nodes:
         for r in [1, 2]:
             # high-temp forces off
-            m.heat_logic.add(m.pf[n, r] <= Pmax * (1 - m.y_high[n, r]))
+            m.heat_logic.add(m.p[n, r] <= Pmax * (1 - m.w[n, r]))
 
             # low-temp override forces max unless high-temp also active
-            m.heat_logic.add(m.pf[n, r] >= Pmax * (m.y_low[n, r] - m.y_high[n, r]))
+            m.heat_logic.add(m.p[n, r] >= Pmax * (m.u[n, r] - m.w[n, r]))
 
             # if neither override is active, pf should equal pc
             m.heat_logic.add(
-                m.pf[n, r] <= m.pc[n, r] + Pmax * (m.y_low[n, r] + m.y_high[n, r])
+                m.p[n, r] <= m.q[n, r] + Pmax * (m.u[n, r] + m.w[n, r])
             )
             m.heat_logic.add(
-                m.pf[n, r] >= m.pc[n, r] - Pmax * (m.y_low[n, r] + m.y_high[n, r])
+                m.p[n, r] >= m.q[n, r] - Pmax * (m.u[n, r] + m.w[n, r])
             )
 
     # -----------------------------------------------------
@@ -453,36 +452,36 @@ def select_action(state):
 
     # humidity-triggered ON
     for n in all_nodes:
-        m.vent_logic.add(m.Hum[n] <= HHigh + BIG_M * m.ve[n])
+        m.vent_logic.add(m.H[n] <= HHigh + BIG_M * m.v[n])
 
     # effective vent must be at least commanded vent
     for n in all_nodes:
-        m.vent_logic.add(m.ve[n] >= m.vb[n])
+        m.vent_logic.add(m.v[n] >= m.vc[n])
 
     # startup detection
     for n in all_nodes:
         if n == root:
             prev_on = 1 if vent_counter_0 > 0 else 0
-            m.vent_logic.add(m.start_vent[n] >= m.ve[n] - prev_on)
-            m.vent_logic.add(m.start_vent[n] <= m.ve[n])
-            m.vent_logic.add(m.start_vent[n] <= 1 - prev_on)
+            m.vent_logic.add(m.s[n] >= m.v[n] - prev_on)
+            m.vent_logic.add(m.s[n] <= m.v[n])
+            m.vent_logic.add(m.s[n] <= 1 - prev_on)
         else:
             p = parent[n]
-            m.vent_logic.add(m.start_vent[n] >= m.ve[n] - m.ve[p])
-            m.vent_logic.add(m.start_vent[n] <= m.ve[n])
-            m.vent_logic.add(m.start_vent[n] <= 1 - m.ve[p])
+            m.vent_logic.add(m.s[n] >= m.v[n] - m.v[p])
+            m.vent_logic.add(m.s[n] <= m.v[n])
+            m.vent_logic.add(m.s[n] <= 1 - m.v[p])
 
     # existing inertia from current observed vent_counter
-    # Assignment logic: if started, must remain ON for 3 hours total. 
+    # Assignment logic: if started, must remain ON for 3 hours total.
     # Conservative interpretation from current counter:
     # counter 1 => ON now and next step
     # counter 2 => ON now
     if vent_counter_0 == 1:
-        m.force_counter_root = pyo.Constraint(expr=m.ve[root] == 1)
+        m.force_counter_root = pyo.Constraint(expr=m.v[root] == 1)
         for c in children[root]:
-            m.vent_logic.add(m.ve[c] == 1)
+            m.vent_logic.add(m.v[c] == 1)
     elif vent_counter_0 == 2:
-        m.force_counter_root = pyo.Constraint(expr=m.ve[root] == 1)
+        m.force_counter_root = pyo.Constraint(expr=m.v[root] == 1)
 
     # minimum up-time along descendants
     def descendants_with_depth(start_node, max_depth):
@@ -500,7 +499,7 @@ def select_action(state):
     for n in all_nodes:
         desc = descendants_with_depth(n, Uvent - 1)
         for ch, depth in desc:
-            m.vent_logic.add(m.ve[ch] >= m.start_vent[n])
+            m.vent_logic.add(m.v[ch] >= m.s[n])
 
     # -----------------------------------------------------
     # Dynamics from parent node -> child node
@@ -512,32 +511,32 @@ def select_action(state):
 
         # room 1
         m.dynamics.add(
-            m.Temp[n, 1] ==
-            m.Temp[p, 1]
-            + z_exch * (m.Temp[p, 2] - m.Temp[p, 1])
-            + z_loss * (m.tout[p] - m.Temp[p, 1])
-            + z_conv * m.pf[p, 1]
-            - z_cool * m.ve[p]
+            m.T[n, 1] ==
+            m.T[p, 1]
+            + z_exch * (m.T[p, 2] - m.T[p, 1])
+            + z_loss * (m.Tout[p] - m.T[p, 1])
+            + z_conv * m.p[p, 1]
+            - z_cool * m.v[p]
             + z_occ * m.occ[p, 1]
         )
 
         # room 2
         m.dynamics.add(
-            m.Temp[n, 2] ==
-            m.Temp[p, 2]
-            + z_exch * (m.Temp[p, 1] - m.Temp[p, 2])
-            + z_loss * (m.tout[p] - m.Temp[p, 2])
-            + z_conv * m.pf[p, 2]
-            - z_cool * m.ve[p]
+            m.T[n, 2] ==
+            m.T[p, 2]
+            + z_exch * (m.T[p, 1] - m.T[p, 2])
+            + z_loss * (m.Tout[p] - m.T[p, 2])
+            + z_conv * m.p[p, 2]
+            - z_cool * m.v[p]
             + z_occ * m.occ[p, 2]
         )
 
         # humidity
         m.dynamics.add(
-            m.Hum[n] ==
-            m.Hum[p]
+            m.H[n] ==
+            m.H[p]
             + eta_occ * (m.occ[p, 1] + m.occ[p, 2])
-            - eta_vent * m.ve[p]
+            - eta_vent * m.v[p]
         )
 
 
@@ -554,7 +553,7 @@ def select_action(state):
     # future temperature or humidity state inside this model. Therefore, leaf nodes
     # are used only in the terminal penalty.
     energy_cost = sum(
-        m.q[n] * m.price[n] * (Pvent * m.ve[n] + m.pf[n, 1] + m.pf[n, 2])
+        m.rho[n] * m.lam[n] * (Pvent * m.v[n] + m.p[n, 1] + m.p[n, 2])
         for n in decision_nodes
     )
 
@@ -569,7 +568,7 @@ def select_action(state):
     solver.options["TimeLimit"] = SOLVER_TIME_LIMIT
     solver.options["MIPGap"] = MIP_GAP
     solver.options["OutputFlag"] = 0
-    
+
     results = solver.solve(m, tee=False)
 
     term_cond = str(results.solver.termination_condition).lower()
@@ -580,13 +579,13 @@ def select_action(state):
     # print("SP objective value:", pyo.value(m.obj))
     # print("Energy cost part:", pyo.value(energy_cost))
 
-    
+
 
     # ----------------------------------------------
     # Extract here-and-now action from root node
     # -----------------------------------------------------
-    p1 = pyo.value(m.pf[root, 1])
-    p2 = pyo.value(m.pf[root, 2])
+    p1 = pyo.value(m.p[root, 1])
+    p2 = pyo.value(m.p[root, 2])
 
     # Return the commanded ventilation decision.
     # The optimization also models the effective ventilation ve[root], which may be
@@ -595,7 +594,7 @@ def select_action(state):
     # controllable command; the environment/controller logic can then enforce any
     # overrules.
     # !!!!!!!!!!! Apply overrule to environment part !!!!!!!!!!!!
-    v = pyo.value(m.ve[root])
+    v = pyo.value(m.v[root])
 
     if p1 is None or p2 is None or v is None:
         raise RuntimeError("No valid decision extracted from model.")

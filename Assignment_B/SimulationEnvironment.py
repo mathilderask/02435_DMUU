@@ -322,7 +322,8 @@ class RestaurantSimulationEnvironment:
             state = self.current_state()
             try:
                 action = self._policy_action(policy, state)
-            except Exception:
+            except Exception as e:
+                print("POLICY ERROR:", repr(e))
                 action = {"HeatPowerRoom1": 0.0, "HeatPowerRoom2": 0.0, "VentilationON": 0}
             self.step(action)
 

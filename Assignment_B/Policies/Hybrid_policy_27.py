@@ -24,7 +24,7 @@ from . import ADP_policy_27 as ADP
 # Rollout configuration
 # ============================================================
 N_ROLLOUT_SCENARIOS = 3
-PRINT_RUNTIME = True
+PRINT_RUNTIME = False
 _RUNTIME_LOG: List[float] = []
 
 HEAT_GRID_FRACTIONS = [0.0, 0.25, 0.50, 0.75, 1.0]
@@ -104,7 +104,6 @@ def simulate_transition(
 
 def candidate_current_actions(
     base_action: Dict[str, Any],
-    state: Dict[str, Any],
     params: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
     """
@@ -122,7 +121,7 @@ def candidate_current_actions(
 
     h1_base = float(np.clip(safe_float(base_action.get("HeatPowerRoom1", 0.0)), 0.0, Pmax))
     h2_base = float(np.clip(safe_float(base_action.get("HeatPowerRoom2", 0.0)), 0.0, Pmax))
-    v_base = int(round(safe_float(base_action.get("VentilationON", 0), 0)))
+    v_base = int(np.clip(round(safe_float(base_action.get("VentilationON", 0), 0)), 0, 1))
 
     raw_candidates: List[Tuple[float, float, int]] = [(h1_base, h2_base, v_base)]
 
@@ -223,7 +222,7 @@ def select_action(state: Dict[str, Any]) -> Dict[str, Any]:
     best_action = base_action
     best_cost = float("inf")
 
-    candidates = candidate_current_actions(base_action, state, params)
+    candidates = candidate_current_actions(base_action, params)
     evaluated_candidates = 0
 
     for action in candidates:

@@ -176,7 +176,7 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
         "Optimal in Hindsight": "#111827",
         "SP": "#1C97B6",
         "TwoStageSP": "#4F46E5",
-        "Expected value": "#8B5CF6",
+        "Expected value": "#BEA2FF",
         "ADP": "#F59E0B",
         "Hybrid": "#E3120B",
         

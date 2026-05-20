@@ -3,7 +3,7 @@ Task 4 ADP policy: continuous forward-backward ADP with dummy initial policy.
 
 Straightforward training logic:
 1) Start with zero value-function coefficients.
-2) Forward-backward iteration 1: generate visited states using DummyPolicy.select_action,
+2) Forward-backward iteration 1: generate visited states using Dummy_policy_27.select_action,
    i.e. zero heating and zero ventilation commands.
 3) Forward-backward iterations 2...K: generate visited states using the current
    continuous ADP policy.
@@ -23,7 +23,7 @@ import pyomo.environ as pyo
 import Data.v2_SystemCharacteristics as SystemCharacteristics
 import Data.PriceProcessRestaurant as PriceProcessRestaurant
 import Data.OccupancyProcessRestaurant as OccupancyProcessRestaurant
-import DummyPolicy
+from . import Dummy_policy_27
 
 
 # ============================================================
@@ -513,7 +513,7 @@ def select_action_with_theta_continuous(state, theta_by_time, solver_time_limit=
 
     except Exception:
         # Safe fallback if the continuous solve fails. The evaluator applies overrules.
-        return DummyPolicy.select_action(state)
+        return Dummy_policy_27.select_action(state)
 
 def select_action_with_theta(state, theta_by_time):
     params = get_fixed_params()
@@ -664,7 +664,7 @@ def load_empirical_data():
 
 def dummy_policy_action(state):
     """Use the actual imported dummy policy for the first forward pass."""
-    return DummyPolicy.select_action(state)
+    return Dummy_policy_27.select_action(state)
 
 
 def choose_forward_action(state, theta_by_time, use_dummy_policy):
@@ -782,7 +782,7 @@ def train_theta_forward_backward(
     Straightforward forward-backward ADP training.
 
     Theta is initialized at zero. The first forward pass uses the dummy policy
-    from DummyPolicy.py. All later forward passes use the current continuous ADP
+    from Dummy_policy_27.py. All later forward passes use the current continuous ADP
     policy. No dummy share, no mixed schedule, no alternative forward policy.
     """
     global THETA_BY_TIME
@@ -797,7 +797,7 @@ def train_theta_forward_backward(
     for it in range(1, n_iterations + 1):
         use_dummy_policy = (it == 1)
 
-        print(f"\nForward-backward iteration {it}/{n_iterations} | forward policy: {'DummyPolicy' if use_dummy_policy else 'continuous ADP'}")
+        print(f"\nForward-backward iteration {it}/{n_iterations} | forward policy: {'Dummy_policy_27' if use_dummy_policy else 'continuous ADP'}")
 
         forward_states = generate_forward_pass_states(
             theta,
@@ -897,7 +897,7 @@ def update_theta_in_file(theta_by_time, file_path=None):
 if __name__ == "__main__":
     if "--train-and-update" in sys.argv:
         print("Forward-backward ADP training")
-        print("Iteration 1 uses DummyPolicy.py behaviour: zero heating and zero ventilation commands.")
+        print("Iteration 1 uses Dummy_policy_27.py behaviour: zero heating and zero ventilation commands.")
         print("Iterations 2...K use the current continuous ADP policy.\n")
 
         theta = train_theta_forward_backward(

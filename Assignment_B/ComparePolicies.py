@@ -24,6 +24,7 @@ import Policies.Hybrid_policy_27 as Hybrid_policy_27
 import Policies.OIH_policy_27 as OIH_policy_27
 import Policies.SP_policy_27 as SP_policy_27
 import Policies.TwoStageSP_policy_27 as TwoStageSP_policy_27
+import Policies.ADP_policy_27 as ADP_policy_27
 from SimulationEnvironment import RestaurantSimulationEnvironment
 
 
@@ -102,6 +103,7 @@ def _policy_factories(price: np.ndarray, occ1: np.ndarray, occ2: np.ndarray) -> 
         "SP": SP_policy_27,
         "TwoStageSP": TwoStageSP_policy_27,
         "Expected value": _ExpectedValueReplayPolicy(params, price, occ1, occ2),
+        "ADP": ADP_policy_27,
         "Hybrid": Hybrid_policy_27,
     }
 
@@ -125,6 +127,7 @@ def _policy_label(name: str) -> str:
         "SP": "Stochastic programming",
         "TwoStageSP": "Two-stage SP",
         "Expected value": "Deterministic lookahead",
+        "ADP": "ADP policy",
         "Hybrid": "Hybrid policy",
     }.get(name, name)
 
@@ -141,6 +144,9 @@ def evaluate_policies(experiments: int) -> Dict[str, Dict[str, Any]]:
     results: Dict[str, Dict[str, Any]] = {}
 
     for name, policy in policies.items():
+        print("------------------------------------")
+        print(f"Evaluating policy: {name} over {len(day_indices)} day(s)...")
+        print("------------------------------------")
         daily_costs = np.zeros(len(day_indices), dtype=float)
 
         for idx, day in enumerate(day_indices):
@@ -171,7 +177,9 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
         "SP": "#1C97B6",
         "TwoStageSP": "#4F46E5",
         "Expected value": "#8B5CF6",
+        "ADP": "#F59E0B",
         "Hybrid": "#E3120B",
+        
     }
 
     names = list(results.keys())
@@ -215,6 +223,7 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
         "SP",
         "TwoStageSP",
         "Expected value",
+        "ADP",
         "Hybrid",
     ]
     legend_handles = [handles[n] for n in desired_order if n in handles]

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-import SP_policy_27
+from . import SP_policy_27
 
 
 def select_action(state: Dict[str, Any]) -> Dict[str, Any]:

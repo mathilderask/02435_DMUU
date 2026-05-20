@@ -579,8 +579,8 @@ def select_action(state, lookahead: int = 4):
     if ("optimal" not in term_cond) and ("feasible" not in term_cond):
         raise RuntimeError(f"Solver did not return usable solution: {term_cond}")
 
-    print("SP objective value:", pyo.value(m.obj))
-    print("Energy cost part:", pyo.value(energy_cost))
+    # print("SP objective value:", pyo.value(m.obj))
+    # print("Energy cost part:", pyo.value(energy_cost))
 
     
 

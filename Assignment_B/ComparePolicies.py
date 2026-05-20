@@ -11,7 +11,6 @@ Usage:
 """
 
 from __future__ import annotations
-
 import argparse
 from pathlib import Path
 from typing import Any, Dict
@@ -184,17 +183,22 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
 
     names = list(results.keys())
 
-    # More vertical space because the bottom plot has one row per policy
-    fig = plt.figure(figsize=(12, 12), constrained_layout=True)
-    gs = fig.add_gridspec(2, 1, height_ratios=[1.0, 1.8])
+    # Wider figure, not taller
+    fig = plt.figure(figsize=(16, 7.5), constrained_layout=True)
 
-    ax_bar = fig.add_subplot(gs[0])
-    bottom_gs = gs[1].subgridspec(len(names), 1, hspace=0.08)
-    ax_hists = [fig.add_subplot(bottom_gs[i]) for i in range(len(names))]
+    # Outer layout: left = bar plot, right = stacked histograms
+    outer_gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.85], wspace=0.08)
 
-    # -----------------------------
-    # Top plot: average daily costs
-    # -----------------------------
+    # Left axis: top/bar plot
+    ax_bar = fig.add_subplot(outer_gs[0, 0])
+
+    # Right side: stacked small-multiple histograms
+    right_gs = outer_gs[0, 1].subgridspec(len(names), 1, hspace=0.06)
+    ax_hists = [fig.add_subplot(right_gs[i, 0]) for i in range(len(names))]
+
+    # -------------------------------------------------
+    # LEFT: Average daily costs
+    # -------------------------------------------------
     avg_costs = [results[name]["average_daily_cost"] for name in names]
 
     ax_bar.bar(
@@ -211,9 +215,9 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
 
     ax_bar.grid(True, axis="y", alpha=0.3)
 
-    # -----------------------------
-    # Bottom plot: small-multiple histograms
-    # -----------------------------
+    # -------------------------------------------------
+    # RIGHT: Small-multiple histograms
+    # -------------------------------------------------
     all_costs = np.concatenate([
         results[name]["daily_costs"]
         for name in names
@@ -221,14 +225,15 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
     ])
 
     if len(all_costs) > 0:
-        # Use common bins for all policies
+        # Use common bins across all policies
         bins = np.histogram_bin_edges(all_costs, bins="auto")
 
-        # Common y-axis limit for fair visual comparison
+        # Common y-limit across all small plots
         max_count = 0
         for name in names:
             counts, _ = np.histogram(results[name]["daily_costs"], bins=bins)
-            max_count = max(max_count, counts.max())
+            if len(counts):
+                max_count = max(max_count, counts.max())
 
         for i, (ax, name) in enumerate(zip(ax_hists, names)):
             data = results[name]["daily_costs"]
@@ -250,7 +255,7 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
                 color=color,
             )
 
-            # Show the average as a dashed vertical line
+            # Mean line
             ax.axvline(
                 results[name]["average_daily_cost"],
                 linestyle="--",
@@ -260,24 +265,37 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
             )
 
             ax.set_ylim(0, max_count * 1.15)
-            ax.set_ylabel(_policy_label(name), rotation=0, ha="right", va="center")
+
+            # Policy name on each row
+            ax.set_ylabel(
+                _policy_label(name),
+                rotation=0,
+                ha="right",
+                va="center",
+                labelpad=30,
+            )
+
             ax.grid(True, axis="x", alpha=0.25)
             ax.grid(True, axis="y", alpha=0.15)
 
-            # Hide x tick labels except on the last plot
+            # Hide x labels except for last subplot
             if i < len(ax_hists) - 1:
                 ax.tick_params(labelbottom=False)
             else:
                 ax.set_xlabel("Daily electricity cost")
 
+    # Title for the right panel
     ax_hists[0].set_title("Distribution of daily costs")
-    ax_hists[len(ax_hists) // 2].set_ylabel("Frequency", labelpad=70)
+
+    # Shared y-label for the histogram column
+    fig.text(0.545, 0.5, "Frequency", va="center", rotation=90)
 
     plots_dir = Path(output_path).parent
     plots_dir.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
+    
 
 def main() -> None:
     args = _parse_args()

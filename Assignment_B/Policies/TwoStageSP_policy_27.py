@@ -201,11 +201,6 @@ def select_action(state):
     low_override_r2_0 = 1 if safe_float(state.get("low_override_r2", 0), 0) > 0.5 else 0
 
     # Safety correction for inconsistent states:
-    # if the observed temperature is already below Tlow, the low-temperature
-    # overrule must be active regardless of the provided latch value.
-    # This does not replace the latch information; it only handles the obvious
-    # below-threshold case. In the hysteresis region Tlow <= T < TOK, the latch
-    # value from the state is still required.
     if T1_0 < Tlow:
         low_override_r1_0 = 1
 
@@ -478,8 +473,6 @@ def select_action(state):
             m.vnt_logic.add(m.s[n] <= 1 - m.v[p])
 
     # existing inertia from current observed vent_counter
-    # Assignment logic: if started, must remain ON for 3 hours total.
-    # Conservative interpretation from current counter:
     # counter 1 => ON now and next step
     # counter 2 => ON now
     if vent_counter_0 == 1:
@@ -560,8 +553,6 @@ def select_action(state):
 
     m.obj = pyo.Objective(expr=energy_cost, sense=pyo.minimize)
 
-
-
     # -----------------------------------------------------
     # Solve
     # -----------------------------------------------------
@@ -577,11 +568,6 @@ def select_action(state):
     if ("optimal" not in term_cond) and ("feasible" not in term_cond):
         raise RuntimeError(f"Solver did not return usable solution: {term_cond}")
 
-    # print("SP objective value:", pyo.value(m.obj))
-    # print("Energy cost part:", pyo.value(energy_cost))
-
-
-
     # ----------------------------------------------
     # Extract here-and-now action from root node
     # -----------------------------------------------------
@@ -589,12 +575,6 @@ def select_action(state):
     p2 = pyo.value(m.p[root, 2])
 
     # Return the commanded ventilation decision.
-    # The optimization also models the effective ventilation ve[root], which may be
-    # forced ON by humidity overrule or ventilation inertia and is used for cost and
-    # dynamics inside the lookahead model. The submitted action corresponds to the
-    # controllable command; the environment/controller logic can then enforce any
-    # overrules.
-    # !!!!!!!!!!! Apply overrule to environment part !!!!!!!!!!!!
     v = pyo.value(m.v[root])
 
     if p1 is None or p2 is None or v is None:

@@ -195,11 +195,6 @@ def select_action(state):
     low_override_r2_0 = 1 if safe_float(state.get("low_override_r2", 0), 0) > 0.5 else 0
 
     # Safety correction for inconsistent states:
-    # if the observed temperature is already below Tlow, the low-temperature
-    # overrule must be active regardless of the provided latch value.
-    # This does not replace the latch information; it only handles the obvious
-    # below-threshold case. In the hysteresis region Tlow <= T < TOK, the latch
-    # value from the state is still required.
     if T1_0 < Tlow:
         low_override_r1_0 = 1
 
@@ -472,10 +467,6 @@ def select_action(state):
             m.vent_logic.add(m.s[n] <= 1 - m.v[p])
 
     # existing inertia from current observed vent_counter
-    # Assignment logic: if started, must remain ON for 3 hours total.
-    # Conservative interpretation from current counter:
-    # counter 1 => ON now and next step
-    # counter 2 => ON now
     if vent_counter_0 == 1:
         m.force_counter_root = pyo.Constraint(expr=m.v[root] == 1)
         for c in children[root]:
@@ -543,23 +534,14 @@ def select_action(state):
 
     # -----------------------------------------------------
     # Objective: expected energy cost over nodes
-    # plus small leaf penalty to reduce myopia
     # -----------------------------------------------------
     decision_nodes = [n for n in all_nodes if len(children[n]) > 0]
-
-    # Charge operating costs only at non-leaf nodes, i.e. nodes whose actions
-    # are followed by a modeled state transition. Leaf nodes represent the terminal
-    # predicted state of the lookahead horizon; their actions would not affect any
-    # future temperature or humidity state inside this model. Therefore, leaf nodes
-    # are used only in the terminal penalty.
     energy_cost = sum(
         m.rho[n] * m.lam[n] * (Pvent * m.v[n] + m.p[n, 1] + m.p[n, 2])
         for n in decision_nodes
     )
 
     m.obj = pyo.Objective(expr=energy_cost, sense=pyo.minimize)
-
-
 
     # -----------------------------------------------------
     # Solve
@@ -576,11 +558,6 @@ def select_action(state):
     if ("optimal" not in term_cond) and ("feasible" not in term_cond):
         raise RuntimeError(f"Solver did not return usable solution: {term_cond}")
 
-    # print("SP objective value:", pyo.value(m.obj))
-    # print("Energy cost part:", pyo.value(energy_cost))
-
-
-
     # ----------------------------------------------
     # Extract here-and-now action from root node
     # -----------------------------------------------------
@@ -588,12 +565,6 @@ def select_action(state):
     p2 = pyo.value(m.p[root, 2])
 
     # Return the commanded ventilation decision.
-    # The optimization also models the effective ventilation ve[root], which may be
-    # forced ON by humidity overrule or ventilation inertia and is used for cost and
-    # dynamics inside the lookahead model. The submitted action corresponds to the
-    # controllable command; the environment/controller logic can then enforce any
-    # overrules.
-    # !!!!!!!!!!! Apply overrule to environment part !!!!!!!!!!!!
     v = pyo.value(m.v[root])
 
     if p1 is None or p2 is None or v is None:

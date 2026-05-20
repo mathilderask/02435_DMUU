@@ -1,12 +1,5 @@
 """
 Task 5 Hybrid policy: ADP rollout policy with continuous ADP base policy.
-
-The trained ADP policy is used as the base policy. Rollout is used only to
-improve the current here-and-now action. For each candidate current action,
-future trajectories are simulated and all future decisions are chosen by the
-fixed ADP base policy.
-
-No stochastic programming policy and no empirical evaluation data are used here.
 """
 
 from __future__ import annotations

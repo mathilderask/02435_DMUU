@@ -139,17 +139,16 @@ def candidate_current_actions(
         h2 = float(np.clip(h2, 0.0, Pmax))
         v = int(np.clip(v, 0, 1))
 
-        eff_h1, eff_h2, eff_v = ADP.apply_overrules(state, h1, h2, v, params)
-        key = (round(eff_h1, 6), round(eff_h2, 6), int(eff_v))
+        key = (round(h1, 6), round(h2, 6), int(v))
 
         if key in seen:
             continue
 
         seen.add(key)
         candidates.append({
-            "HeatPowerRoom1": float(eff_h1),
-            "HeatPowerRoom2": float(eff_h2),
-            "VentilationON": int(eff_v),
+            "HeatPowerRoom1": float(h1),
+            "HeatPowerRoom2": float(h2),
+            "VentilationON": int(v),
         })
 
     return candidates

@@ -344,50 +344,50 @@ def solve_continuous_bellman(
     m = pyo.ConcreteModel()
     m.R = pyo.Set(initialize=[1, 2])
 
-    m.pc = pyo.Var(m.R, bounds=(0.0, Pmax))
-    m.vb = pyo.Var(domain=pyo.Binary)
-    m.pf = pyo.Var(m.R, bounds=(0.0, Pmax))
-    m.ve = pyo.Var(domain=pyo.Binary)
+    m.q = pyo.Var(m.R, bounds=(0.0, Pmax))
+    m.vc = pyo.Var(domain=pyo.Binary)
+    m.p = pyo.Var(m.R, bounds=(0.0, Pmax))
+    m.v = pyo.Var(domain=pyo.Binary)
 
     m.T1_next = pyo.Var()
     m.T2_next = pyo.Var()
     m.H_next = pyo.Var()
 
-    m.low1_next = pyo.Var(domain=pyo.Binary)
-    m.low2_next = pyo.Var(domain=pyo.Binary)
-    m.z1_below_low = pyo.Var(domain=pyo.Binary)
-    m.z2_below_low = pyo.Var(domain=pyo.Binary)
-    m.y1_ok_next = pyo.Var(domain=pyo.Binary)
-    m.y2_ok_next = pyo.Var(domain=pyo.Binary)
+    m.ell1_next = pyo.Var(domain=pyo.Binary)
+    m.ell2_next = pyo.Var(domain=pyo.Binary)
+    m.a1_next = pyo.Var(domain=pyo.Binary)
+    m.a2_next = pyo.Var(domain=pyo.Binary)
+    m.b1_next = pyo.Var(domain=pyo.Binary)
+    m.b2_next = pyo.Var(domain=pyo.Binary)
 
-    m.V_next = pyo.Var(bounds=(0.0, None))
+    m.Z_next = pyo.Var(bounds=(0.0, None))
     m.cons = pyo.ConstraintList()
 
     # Effective heating overrules
     if T1 >= THigh:
-        m.cons.add(m.pf[1] == 0.0)
-        m.cons.add(m.pc[1] == 0.0)
+        m.cons.add(m.p[1] == 0.0)
+        m.cons.add(m.q[1] == 0.0)
     elif low1 == 1:
-        m.cons.add(m.pf[1] == Pmax)
-        m.cons.add(m.pc[1] == Pmax)
+        m.cons.add(m.p[1] == Pmax)
+        m.cons.add(m.q[1] == Pmax)
     else:
-        m.cons.add(m.pf[1] == m.pc[1])
+        m.cons.add(m.p[1] == m.q[1])
 
     if T2 >= THigh:
-        m.cons.add(m.pf[2] == 0.0)
-        m.cons.add(m.pc[2] == 0.0)
+        m.cons.add(m.p[2] == 0.0)
+        m.cons.add(m.q[2] == 0.0)
     elif low2 == 1:
-        m.cons.add(m.pf[2] == Pmax)
-        m.cons.add(m.pc[2] == Pmax)
+        m.cons.add(m.p[2] == Pmax)
+        m.cons.add(m.q[2] == Pmax)
     else:
-        m.cons.add(m.pf[2] == m.pc[2])
+        m.cons.add(m.p[2] == m.q[2])
 
     # Effective ventilation overrules
     if Hum >= HHigh or (0 < vent_counter < params["Uvent"]):
-        m.cons.add(m.ve == 1)
-        m.cons.add(m.vb == 1)
+        m.cons.add(m.v == 1)
+        m.cons.add(m.vc == 1)
     else:
-        m.cons.add(m.ve == m.vb)
+        m.cons.add(m.v == m.vc)
 
     # Dynamics
     m.cons.add(
@@ -395,8 +395,8 @@ def solve_continuous_bellman(
         T1
         + params["z_exch"] * (T2 - T1)
         + params["z_loss"] * (Tout - T1)
-        + params["z_conv"] * m.pf[1]
-        - params["z_cool"] * m.ve
+        + params["z_conv"] * m.p[1]
+        - params["z_cool"] * m.v
         + params["z_occ"] * Occ1
     )
     m.cons.add(
@@ -404,34 +404,34 @@ def solve_continuous_bellman(
         T2
         + params["z_exch"] * (T1 - T2)
         + params["z_loss"] * (Tout - T2)
-        + params["z_conv"] * m.pf[2]
-        - params["z_cool"] * m.ve
+        + params["z_conv"] * m.p[2]
+        - params["z_cool"] * m.v
         + params["z_occ"] * Occ2
     )
-    m.cons.add(m.H_next == Hum + params["eta_occ"] * (Occ1 + Occ2) - params["eta_vent"] * m.ve)
+    m.cons.add(m.H_next == Hum + params["eta_occ"] * (Occ1 + Occ2) - params["eta_vent"] * m.v)
 
     # Low-temperature latch next state
-    m.cons.add(m.T1_next <= Tlow + BIG_M * (1 - m.z1_below_low))
-    m.cons.add(m.T1_next >= Tlow - BIG_M * m.z1_below_low)
-    m.cons.add(m.T2_next <= Tlow + BIG_M * (1 - m.z2_below_low))
-    m.cons.add(m.T2_next >= Tlow - BIG_M * m.z2_below_low)
+    m.cons.add(m.T1_next <= Tlow + BIG_M * (1 - m.a1_next))
+    m.cons.add(m.T1_next >= Tlow - BIG_M * m.a1_next)
+    m.cons.add(m.T2_next <= Tlow + BIG_M * (1 - m.a2_next))
+    m.cons.add(m.T2_next >= Tlow - BIG_M * m.a2_next)
 
-    m.cons.add(m.T1_next >= TOK - BIG_M * (1 - m.y1_ok_next))
-    m.cons.add(m.T1_next <= TOK + BIG_M * m.y1_ok_next)
-    m.cons.add(m.T2_next >= TOK - BIG_M * (1 - m.y2_ok_next))
-    m.cons.add(m.T2_next <= TOK + BIG_M * m.y2_ok_next)
+    m.cons.add(m.T1_next >= TOK - BIG_M * (1 - m.b1_next))
+    m.cons.add(m.T1_next <= TOK + BIG_M * m.b1_next)
+    m.cons.add(m.T2_next >= TOK - BIG_M * (1 - m.b2_next))
+    m.cons.add(m.T2_next <= TOK + BIG_M * m.b2_next)
 
-    m.cons.add(m.low1_next >= m.z1_below_low)
-    m.cons.add(m.low1_next >= low1 - m.y1_ok_next)
-    m.cons.add(m.low1_next <= m.z1_below_low + low1)
-    m.cons.add(m.low1_next <= m.z1_below_low + (1 - m.y1_ok_next))
+    m.cons.add(m.ell1_next >= m.a1_next)
+    m.cons.add(m.ell1_next >= low1 - m.b1_next)
+    m.cons.add(m.ell1_next <= m.a1_next + low1)
+    m.cons.add(m.ell1_next <= m.a1_next + (1 - m.b1_next))
 
-    m.cons.add(m.low2_next >= m.z2_below_low)
-    m.cons.add(m.low2_next >= low2 - m.y2_ok_next)
-    m.cons.add(m.low2_next <= m.z2_below_low + low2)
-    m.cons.add(m.low2_next <= m.z2_below_low + (1 - m.y2_ok_next))
+    m.cons.add(m.ell2_next >= m.a2_next)
+    m.cons.add(m.ell2_next >= low2 - m.b2_next)
+    m.cons.add(m.ell2_next <= m.a2_next + low2)
+    m.cons.add(m.ell2_next <= m.a2_next + (1 - m.b2_next))
 
-    vent_counter_next_expr = (vent_counter + 1) * m.ve
+    vent_counter_next_expr = (vent_counter + 1) * m.v
 
     value_expr = (
         theta_next[0]
@@ -442,15 +442,15 @@ def solve_continuous_bellman(
         + theta_next[5] * occ1_next
         + theta_next[6] * occ2_next
         + theta_next[7] * vent_counter_next_expr
-        + theta_next[8] * m.low1_next
-        + theta_next[9] * m.low2_next
+        + theta_next[8] * m.ell1_next
+        + theta_next[9] * m.ell2_next
         + theta_next[10] * remaining_next
     )
-    m.cons.add(m.V_next >= value_expr)
-    m.cons.add(m.V_next >= TARGET_CLIP_MIN)
+    m.cons.add(m.Z_next >= value_expr)
+    m.cons.add(m.Z_next >= TARGET_CLIP_MIN)
 
-    immediate_cost = price_t * (m.pf[1] + m.pf[2] + Pvent * m.ve)
-    m.obj = pyo.Objective(expr=immediate_cost + m.V_next, sense=pyo.minimize)
+    immediate_cost = price_t * (m.p[1] + m.p[2] + Pvent * m.v)
+    m.obj = pyo.Objective(expr=immediate_cost + m.Z_next, sense=pyo.minimize)
 
     solver = pyo.SolverFactory("gurobi")
     solver.options["OutputFlag"] = 0
@@ -469,17 +469,17 @@ def solve_continuous_bellman(
     if not ok:
         raise RuntimeError(f"Continuous ADP solve failed: {results.solver.status}, {results.solver.termination_condition}")
 
-    h1 = pyo.value(m.pf[1])
-    h2 = pyo.value(m.pf[2])
-    v = pyo.value(m.ve)
+    p1 = pyo.value(m.p[1])
+    p2 = pyo.value(m.p[2])
+    v = pyo.value(m.v)
     obj = pyo.value(m.obj)
 
-    if h1 is None or h2 is None or v is None or obj is None:
+    if p1 is None or p2 is None or v is None or obj is None:
         raise RuntimeError("Continuous ADP solve returned uninitialized values.")
 
     action = {
-        "HeatPowerRoom1": float(max(0.0, min(Pmax, h1))),
-        "HeatPowerRoom2": float(max(0.0, min(Pmax, h2))),
+        "HeatPowerRoom1": float(max(0.0, min(Pmax, p1))),
+        "HeatPowerRoom2": float(max(0.0, min(Pmax, p2))),
         "VentilationON": int(float(v) > 0.5),
     }
     return float(obj), action

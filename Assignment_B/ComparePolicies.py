@@ -188,7 +188,7 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
     names = list(results.keys())
 
     # Wider figure, not taller
-    fig = plt.figure(figsize=(16, 7.5), constrained_layout=True)
+    fig = plt.figure(figsize=(11, 5.5), constrained_layout=True)
 
     # Outer layout: left = bar plot, right = stacked histograms
     outer_gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.85], wspace=0.08)
@@ -292,7 +292,7 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
     ax_hists[0].set_title("Distribution of daily costs")
 
     # Shared y-label for the histogram column
-    fig.text(0.545, 0.5, "Frequency", va="center", rotation=90)
+    fig.text(0.53, 0.5, "Frequency", va="center", rotation=90)
 
     plots_dir = Path(output_path).parent
     plots_dir.mkdir(parents=True, exist_ok=True)

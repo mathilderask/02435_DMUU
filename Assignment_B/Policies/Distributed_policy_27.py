@@ -47,7 +47,6 @@ OUTPUT_DIR = "task7_results"
 SOLVER_NAME = "gurobi"
 SOLVER_TEE = False
 
-
 # ============================================================
 # Data loading
 # ============================================================
@@ -121,8 +120,8 @@ def compute_system_objective(T: np.ndarray, data: Dict) -> float:
     for n in range(N_STORES):
         w_n = n + 2
         for t in range(1, H + 1):
-            T_store = 0.5 * (T[n, 0, t] + T[n, 1, t])
-            objective += w_n * (T_store - T_ref) ** 2
+            for r in range(2):
+                objective += w_n * (T[n, r, t] - T_ref) ** 2
 
     return float(objective)
 
@@ -183,11 +182,8 @@ def solve_store_subproblem(
 
     def objective_rule(m):
         temperature_penalty = sum(
-            w_n
-            * (
-                0.5 * (m.Temp[1, t + 1] + m.Temp[2, t + 1])
-                - data["Temperature_reference"]
-            ) ** 2
+            w_n * (m.Temp[r, t + 1] - data["Temperature_reference"]) ** 2
+            for r in m.R
             for t in m.TS
         )
 
@@ -266,12 +262,9 @@ def solve_centralized(data: Dict) -> Tuple[float, np.ndarray, np.ndarray]:
 
     def objective_rule(m):
         return sum(
-            (n + 1)
-            * (
-                0.5 * (m.Temp[n, 1, t + 1] + m.Temp[n, 2, t + 1])
-                - data["Temperature_reference"]
-            ) ** 2
+            (n + 1) * (m.Temp[n, r, t + 1] - data["Temperature_reference"]) ** 2
             for n in m.N
+            for r in m.R
             for t in m.TS
         )
 
@@ -567,3 +560,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

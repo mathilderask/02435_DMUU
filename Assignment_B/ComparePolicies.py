@@ -18,6 +18,7 @@ from typing import Any, Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 import Policies.Dummy_policy_27 as Dummy_policy_27
 import Policies.Hybrid_policy_27 as Hybrid_policy_27
@@ -122,13 +123,13 @@ def _parse_args() -> argparse.Namespace:
 
 def _policy_label(name: str) -> str:
     return {
-        "Dummy": "Dummy policy",
-        "Optimal in Hindsight": "Optimal in hindsight",
-        "SP": "Stochastic programming",
+        "Dummy": "Dummy",
+        "Optimal in Hindsight": "OIH",
+        "SP": "SP",
         "TwoStageSP": "Two-stage SP",
-        "Expected value": "Deterministic lookahead",
-        "ADP": "ADP policy",
-        "Hybrid": "Hybrid policy",
+        "Expected value": "Deterministic",
+        "ADP": "ADP",
+        "Hybrid": "Hybrid",
     }.get(name, name)
 
 
@@ -144,9 +145,9 @@ def evaluate_policies(experiments: int) -> Dict[str, Dict[str, Any]]:
     results: Dict[str, Dict[str, Any]] = {}
 
     for name, policy in policies.items():
+        start_time = time.perf_counter()
         print("------------------------------------")
         print(f"Evaluating policy: {name} over {len(day_indices)} day(s)...")
-        print("------------------------------------")
         daily_costs = np.zeros(len(day_indices), dtype=float)
 
         for idx, day in enumerate(day_indices):
@@ -160,12 +161,15 @@ def evaluate_policies(experiments: int) -> Dict[str, Dict[str, Any]]:
 
             episode = env.evaluate_policy(policy, day=day)
             daily_costs[idx] = float(episode["total_cost"])
-
+            
         results[name] = {
             "day_indices": np.asarray(day_indices, dtype=int),
             "daily_costs": daily_costs,
             "average_daily_cost": float(np.mean(daily_costs)) if len(daily_costs) else 0.0,
+            "evaluation_time_seconds": time.perf_counter() - start_time,
         }
+
+        print(f"Evaluated {name}: {results[name]['evaluation_time_seconds']:.2f} seconds")
 
     return results
 
@@ -179,58 +183,116 @@ def plot_comparison(results: Dict[str, Dict[str, Any]], output_path: str, experi
         "Expected value": "#BEA2FF",
         "ADP": "#F59E0B",
         "Hybrid": "#E3120B",
-        
     }
 
     names = list(results.keys())
-    fig, axes = plt.subplots(2, 1, figsize=(11, 10), constrained_layout=True)
 
+    # Wider figure, not taller
+    fig = plt.figure(figsize=(16, 7.5), constrained_layout=True)
+
+    # Outer layout: left = bar plot, right = stacked histograms
+    outer_gs = fig.add_gridspec(1, 2, width_ratios=[1.15, 1.85], wspace=0.08)
+
+    # Left axis: top/bar plot
+    ax_bar = fig.add_subplot(outer_gs[0, 0])
+
+    # Right side: stacked small-multiple histograms
+    right_gs = outer_gs[0, 1].subgridspec(len(names), 1, hspace=0.06)
+    ax_hists = [fig.add_subplot(right_gs[i, 0]) for i in range(len(names))]
+
+    # -------------------------------------------------
+    # LEFT: Average daily costs
+    # -------------------------------------------------
     avg_costs = [results[name]["average_daily_cost"] for name in names]
-    axes[0].bar([_policy_label(name) for name in names], avg_costs, color=[colors[name] for name in names])
-    axes[0].set_ylabel("Average daily cost")
-    axes[0].set_title(f"Policy comparison across {experiments} experiments")
-    axes[0].tick_params(axis="x", labelrotation=20)
-    for label in axes[0].get_xticklabels():
-        label.set_ha("right")
-    axes[0].grid(True, axis="y", alpha=0.3)
 
-    # Histogram outlines of daily costs (one per policy)
-    all_costs = np.concatenate([results[name]["daily_costs"] for name in names if len(results[name]["daily_costs"])])
+    ax_bar.bar(
+        [_policy_label(name) for name in names],
+        avg_costs,
+        color=[colors[name] for name in names],
+    )
+    ax_bar.set_ylabel("Average daily cost")
+    ax_bar.set_title(f"Policy comparison across {experiments} experiments")
+    ax_bar.tick_params(axis="x", labelrotation=20)
+
+    for label in ax_bar.get_xticklabels():
+        label.set_ha("right")
+
+    ax_bar.grid(True, axis="y", alpha=0.3)
+
+    # -------------------------------------------------
+    # RIGHT: Small-multiple histograms
+    # -------------------------------------------------
+    all_costs = np.concatenate([
+        results[name]["daily_costs"]
+        for name in names
+        if len(results[name]["daily_costs"])
+    ])
+
     if len(all_costs) > 0:
-        handles: Dict[str, Any] = {}
+        # Use common bins across all policies
+        bins = np.histogram_bin_edges(all_costs, bins="auto")
+
+        # Common y-limit across all small plots
+        max_count = 0
         for name in names:
+            counts, _ = np.histogram(results[name]["daily_costs"], bins=bins)
+            if len(counts):
+                max_count = max(max_count, counts.max())
+
+        for i, (ax, name) in enumerate(zip(ax_hists, names)):
             data = results[name]["daily_costs"]
-            if len(data) == 0:
-                continue
-            # plot histogram outline for this policy
-            bins = np.histogram_bin_edges(data, bins="auto")
-            _, _, patches = axes[1].hist(
+            color = colors[name]
+
+            ax.hist(
+                data,
+                bins=bins,
+                histtype="stepfilled",
+                alpha=0.18,
+                color=color,
+            )
+
+            ax.hist(
                 data,
                 bins=bins,
                 histtype="step",
                 linewidth=2.0,
-                label=_policy_label(name),
-                color=colors[name],
+                color=color,
             )
-            handles[name] = patches[0]
-    axes[1].set_xlabel("Daily electricity cost")
-    axes[1].set_ylabel("Frequency")
-    axes[1].set_title("Histogram of daily costs")
-    # Enforce specific legend order preferred by the user
-    desired_order = [
-        "Dummy",
-        "Optimal in Hindsight",
-        "SP",
-        "TwoStageSP",
-        "Expected value",
-        "ADP",
-        "Hybrid",
-    ]
-    legend_handles = [handles[n] for n in desired_order if n in handles]
-    legend_labels = [_policy_label(n) for n in desired_order if n in handles]
-    if legend_handles:
-        axes[1].legend(legend_handles, legend_labels, ncol=2)
-    axes[1].grid(True, alpha=0.3)
+
+            # Mean line
+            ax.axvline(
+                results[name]["average_daily_cost"],
+                linestyle="--",
+                linewidth=1.5,
+                color=color,
+                alpha=0.9,
+            )
+
+            ax.set_ylim(0, max_count * 1.15)
+
+            # Policy name on each row
+            ax.set_ylabel(
+                _policy_label(name),
+                rotation=0,
+                ha="right",
+                va="center",
+                labelpad=30,
+            )
+
+            ax.grid(True, axis="x", alpha=0.25)
+            ax.grid(True, axis="y", alpha=0.15)
+
+            # Hide x labels except for last subplot
+            if i < len(ax_hists) - 1:
+                ax.tick_params(labelbottom=False)
+            else:
+                ax.set_xlabel("Daily electricity cost")
+
+    # Title for the right panel
+    ax_hists[0].set_title("Distribution of daily costs")
+
+    # Shared y-label for the histogram column
+    fig.text(0.545, 0.5, "Frequency", va="center", rotation=90)
 
     plots_dir = Path(output_path).parent
     plots_dir.mkdir(parents=True, exist_ok=True)

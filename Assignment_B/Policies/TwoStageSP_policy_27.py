@@ -8,9 +8,10 @@ lookahead so the comparison runner can treat it as a separate policy.
 import numpy as np
 import pyomo.environ as pyo
 
-import Data.v2_SystemCharacteristics as SystemCharacteristics
+import Policies.SP_policy_27 as SP_policy_27
 import Data.PriceProcessRestaurant
 import Data.OccupancyProcessRestaurant
+import Data.v2_SystemCharacteristics as SystemCharacteristics
 
 
 def select_action(state):
